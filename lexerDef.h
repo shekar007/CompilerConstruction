@@ -61,6 +61,7 @@ typedef enum
     TK_GE,
     TK_NE
 } TokenName;
+
 typedef union
 {
     int num;

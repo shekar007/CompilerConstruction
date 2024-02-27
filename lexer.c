@@ -13,35 +13,63 @@ abe declarations pehle likh le
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "lexerDef.h"
 
 #define BUFFER_SIZE 4096
 typedef struct twinBuffer
 {
     char *buffer1; // Declare buffer1 as a pointer
     char *buffer2;
-} twinBuffer;
-char *buffer1; // Declare buffer1 as a pointer
-char *buffer2;
-void removeComments(char *testcaseFile, char *cleanFile)
-{
-    int n = sizeof(testcaseFile) / sizeof(testcaseFile[0]);
-    bool falg = false;
-    for (int i = 0; i < n; i++)
-    {
-    }
-};
 
+} twinBuffer;
+twinBuffer *buffer;
+
+int fwdptr = 0;
+
+char *currentBuffer(twinBuffer *buffer)
+{
+    if (bufferChoice == true)
+    {
+        return buffer->buffer1;
+    }
+    return buffer->buffer2;
+}
+TokenName *getNextToken(FILE *ptr)
+{
+    if (ptr == NULL)
+    {
+        return NULL;
+    }
+    else
+    {
+        if (feof(ptr))
+        {
+            fclose(ptr);
+            return NULL;
+        }
+    }
+    Token *token = (Token *)malloc(sizeof(Token));
+    if (currentBuffer(buffer)[fwdptr] == '\0')
+    {
+        fwdptr = 0;
+        ptr = getStream(ptr);
+        if (ptr == NULL)
+        {
+            return NULL;
+        }
+    }
+}
 bool bufferChoice;
 
 FILE *getStream(FILE *fp)
 {
     if (bufferChoice == true)
     {
-        memset(buffer1, '\0', BUFFER_SIZE + 1);
+        memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     }
     else
     {
-        memset(buffer2, '\0', BUFFER_SIZE + 1);
+        memset(buffer->buffer2, '\0', BUFFER_SIZE + 1);
     }
     if (feof(fp))
     {
@@ -54,9 +82,9 @@ FILE *getStream(FILE *fp)
         if (bufferChoice == true)
         {
             bufferChoice = !bufferChoice;
-            if (fread(buffer1, sizeof(char), BUFFER_SIZE, fp) > 0)
+            if (fread(buffer->buffer1, sizeof(char), BUFFER_SIZE, fp) > 0)
             {
-                buffer1[BUFFER_SIZE] = '\0';
+                buffer->buffer1[BUFFER_SIZE] = '\0';
 
                 return fp;
             }
@@ -70,9 +98,9 @@ FILE *getStream(FILE *fp)
         {
             bufferChoice = !bufferChoice;
 
-            if (fread(buffer2, sizeof(char), BUFFER_SIZE, fp) > 0)
+            if (fread(buffer->buffer2, sizeof(char), BUFFER_SIZE, fp) > 0)
             {
-                buffer2[BUFFER_SIZE] = '\0';
+                buffer->buffer2[BUFFER_SIZE] = '\0';
 
                 return fp;
             }
@@ -85,27 +113,23 @@ FILE *getStream(FILE *fp)
     }
 }
 
-Token *getNextToken(twinBuffer B)
-{
-}
-
 int main()
 {
     // Allocate memory for buffers
-    buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
-    if (buffer1 == NULL)
+    buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
+    if (buffer->buffer1 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
         return 1; // Exit with failure status
     }
-    buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
-    if (buffer2 == NULL)
+    buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
+    if (buffer->buffer2 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
         return 1; // Exit with failure status
     }
-    memset(buffer1, '\0', BUFFER_SIZE + 1);
-    memset(buffer2, '\0', BUFFER_SIZE + 1);
+    memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+    memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
 
     FILE *filePtr;
     filePtr = fopen("testCaseFile.txt", "r");
@@ -119,8 +143,6 @@ int main()
     fclose(filePtr);
 
     // Don't forget to free dynamically allocated memory when done using it
-    free(buffer1);
-    free(buffer2);
 
     return 0;
 }

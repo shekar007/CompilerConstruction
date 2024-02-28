@@ -1,14 +1,12 @@
-// declarations
 /*
-kya zaroorat hai declarations ki
-likh le
-zarurat padegi
-baad mie likh loonga
-ok
-how do i follow you?
-abe declarations pehle likh le
 
-and phone on kar apna
+1. double retraction handle karna hai
+2. values of variables and numbers
+3. buffer retraction case
+4. variable length case
+5. add to symbol table using addSymbol function
+6. restrict varibale length
+
 */
 // include statements
 #include <stdio.h>
@@ -28,7 +26,39 @@ twinBuffer *buffer;
 bool bufferChoice;
 
 int fwdptr = 0;
-
+int lineno = 0;
+bool isnum(char c)
+{
+    if (c >= '0' && c <= '9')
+    {
+        return true;
+    }
+    return false;
+}
+bool isalphabet(char c)
+{
+    if (c >= 'a' && c <= 'z')
+    {
+        return true;
+    }
+    return false;
+}
+bool isIgnoreCaseAlphabet(char c)
+{
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+    {
+        return true;
+    }
+    return false;
+}
+bool is2to7(char c)
+{
+    if ((c >= '2' && c <= '7'))
+    {
+        return true;
+    }
+    return false;
+}
 char *currentBuffer(twinBuffer *buffer)
 {
     if (bufferChoice == true)
@@ -711,6 +741,392 @@ TokenName *getNextToken(FILE *fileptr)
             token->lexeme = lexeme;
             token->name = TK_LE;
             return token;
+        }
+        case 35:
+        {
+
+            fileptr = refillBuffer(&fwdptr, fileptr);
+
+            lexeme[lex_ptr] = '#';
+            lex_ptr++;
+            char c = currentBuffer(buffer)[fwdptr];
+            if (isalphabet(c))
+            {
+                prev = c;
+                state = 36;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 36:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+
+            char c = currentBuffer(buffer)[fwdptr];
+            if (isalphabet(c))
+            {
+                state = 36;
+                prev = c;
+                fwdptr++;
+            }
+            else
+            {
+                state = 37;
+                prev = c;
+            }
+            break;
+        }
+        case 37:
+        {
+            token->lexeme = lexeme;
+            token->name = TK_RUID;
+            return token;
+        }
+        case 38:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            if (isnum(c))
+            {
+                prev = c;
+                fwdptr++;
+                state = 38;
+            }
+            else if (c == '.')
+            {
+                state = 40;
+                fwdptr++;
+            }
+            else
+            {
+                state = 39;
+            }
+            break;
+        }
+        case 39:
+        {
+            token->lexeme = lexeme;
+            token->name = TK_NUM;
+            // note
+            return token;
+        }
+        case 40:
+        {
+            lexeme[lex_ptr] = '.';
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            if (isnum(c))
+            {
+                prev = c;
+                state = 42;
+                fwdptr++;
+            }
+            else
+            {
+                // double retraction
+            }
+        }
+        case 41:
+        {
+            // double retraction
+            // note
+        }
+        case 42:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            if (isnum(c))
+            {
+                prev = c;
+                state = 43;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 43:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            if (c == 'E')
+            {
+                prev = c;
+                state = 45;
+                fwdptr++;
+            }
+            else
+            {
+                state = 44;
+            }
+            break;
+        }
+        case 44:
+        {
+            token->lexeme = lexeme;
+            token->name = TK_RNUM;
+            return token;
+            // note
+        }
+        case 45:
+        {
+            lexeme[lex_ptr] = 'E';
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+
+            if (c == '+' | c == '-')
+            {
+                state = 46;
+                fwdptr++;
+            }
+            else if (isnum(c))
+            {
+                state = 47;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+        }
+        case 46:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (isnum(c))
+            {
+                state = 47;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 47:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (isnum(c))
+            {
+                state = 48;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 48:
+        {
+            lexeme[lex_ptr] = prev;
+            token->lexeme = lexeme;
+            token->name = TK_RNUM;
+            // note
+            return token;
+        }
+        case 49:
+        {
+            lexeme[lex_ptr] = '_';
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            // note
+            if (isIgnoreCaseAlphabet(c))
+            {
+                state = 50;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 50:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (isIgnoreCaseAlphabet(c))
+            {
+                state = 50;
+                fwdptr++;
+            }
+            else if (isnum(c))
+            {
+                state = 51;
+                fwdptr++;
+            }
+            else
+            {
+                state = 52;
+                fwdptr++;
+            }
+            break;
+        }
+        case 51:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (isnum(c))
+            {
+                state = 51;
+                fwdptr++;
+            }
+            else
+            {
+                state = 52;
+                fwdptr++;
+            }
+            break;
+        }
+        case 52:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            token->lexeme = lexeme;
+            token->name = TK_FUNID;
+        }
+        case 53:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            // note
+            if (is2to7(c))
+            {
+                state = 54;
+                fwdptr++;
+            }
+            else if (isalphabet(c))
+            {
+                state = 57;
+                fwdptr++;
+            }
+            else
+            {
+                state = 60;
+            }
+            break;
+        }
+        case 54:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (c == 'b' || c == 'c' || c == 'd')
+            {
+                state = 54;
+                fwdptr++;
+            }
+            else if (is2to7(c))
+            {
+                state = 55;
+                fwdptr++;
+            }
+            else
+            {
+                state = 56;
+            }
+            break;
+        }
+        case 55:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (is2to7(c))
+            {
+                state = 55;
+                fwdptr++;
+            }
+            else
+            {
+                state = 56;
+            }
+            break;
+        }
+        case 56:
+        {
+            token->lexeme = lexeme;
+            token->name = TK_ID;
+            return token;
+            // note
+        }
+        case 57:
+        {
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            fileptr = refillBuffer(&fwdptr, fileptr);
+            char c = currentBuffer(buffer)[fwdptr];
+            prev = c;
+            if (isalphabet(c))
+            {
+                state = 57;
+                fwdptr++;
+            }
+            else
+            {
+                state = 58;
+                fwdptr++;
+            }
+            break;
+        }
+        case 58:
+        {
+            token->lexeme = lexeme;
+            token->name = TK_FIELDID;
+            // note
+            return token;
+        }
+        case 59:
+        {
+            lineno++;
+            state = 0;
+            fwdptr++;
+            break;
+        }
+        case 60:
+        {
+            printf("Error at lineno : %d.\nThis is not a valid token : %s", lineno, lexeme);
         }
         }
     }

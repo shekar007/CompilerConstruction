@@ -1,9 +1,9 @@
 /*
 
 1. double retraction handle karna hai
-2. values of variables and numbers
+2. values of variables and numbers - done
 3. buffer retraction case
-4. variable length case
+4. variable length case - Done
 5. add to symbol table using addSymbol function
 6. restrict varibale length
 
@@ -14,6 +14,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lexerDef.h"
+#include "symbolTable.h"
+#include "symbolTableDef.h"
 
 #define BUFFER_SIZE 4096
 typedef struct twinBuffer
@@ -24,8 +26,9 @@ typedef struct twinBuffer
 } twinBuffer;
 twinBuffer *buffer;
 bool bufferChoice;
-
+symTable *symbolTable;
 int fwdptr = 0;
+int varlength = 0;
 int lineno = 0;
 bool isnum(char c)
 {
@@ -157,6 +160,8 @@ TokenName *getNextToken(FILE *fileptr)
     char *lexeme = (char *)malloc(sizeof(char) * 50);
     memset(lexeme, '\0', 50);
     int lex_ptr = 0;
+    varlength = 0;
+    int errtype = 0;
     char prev;
 
     while (true)
@@ -294,6 +299,7 @@ TokenName *getNextToken(FILE *fileptr)
             else if (currentBuffer(buffer)[fwdptr] == '&')
             {
                 state = 24;
+                prev = '%';
                 fwdptr++;
             }
 
@@ -330,6 +336,7 @@ TokenName *getNextToken(FILE *fileptr)
 
             else if (currentBuffer(buffer)[fwdptr] == 'b' || currentBuffer(buffer)[fwdptr] == 'c' || currentBuffer(buffer)[fwdptr] == 'd')
             {
+                varlength++;
                 prev = currentBuffer(buffer)[fwdptr];
                 state = 53;
                 fwdptr++;
@@ -625,15 +632,31 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 27:
         {
-            if (currentBuffer(buffer)[fwdptr] == '\n')
-                lexeme[lex_ptr] = '%';
+
+            lexeme[lex_ptr] = prev;
+            lex_ptr++;
+            token->name = TK_COMMENT;
+
+            do
             {
-                token->lexeme = lexeme;
-                token->name = TK_COMMENT;
-                return token;
-            }
-            state = 27;
-            fwdptr++;
+                fwdptr++;
+                char ch = currentBuffer(buffer)[fwdptr];
+                if (ch == -1)
+                {
+                    token->lexeme = lexeme;
+                    return token;
+                }
+                else if (ch == '\n')
+                {
+                    token->lexeme = lexeme;
+                    lineno++;
+                    return token;
+                }
+                else
+                {
+                    lexeme[lex_ptr] = ch;
+                }
+            } while (true);
         }
 
         case 28:
@@ -786,7 +809,17 @@ TokenName *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_RUID;
-            return token;
+            nodeInfo *n = getInfo(symbolTable, lexeme);
+            if (n->is_present)
+            {
+                token->name = n->node->tokentype;
+                return token;
+            }
+            else
+            {
+                addSymbol(symbolTable, token, lineno);
+                return token;
+            }
         }
         case 38:
         {
@@ -813,9 +846,11 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 39:
         {
+
             token->lexeme = lexeme;
             token->name = TK_NUM;
-            // note
+            token->value->num = atoi(lexeme);
+            token->isint = 1;
             return token;
         }
         case 40:
@@ -878,8 +913,12 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 44:
         {
+
             token->lexeme = lexeme;
             token->name = TK_RNUM;
+            token->isint = 0;
+            token->value->r_num = strtof(lexeme, NULL);
+            token->isint = 0;
             return token;
             // note
         }
@@ -947,7 +986,8 @@ TokenName *getNextToken(FILE *fileptr)
             lexeme[lex_ptr] = prev;
             token->lexeme = lexeme;
             token->name = TK_RNUM;
-            // note
+            token->isint = 0;
+            token->value->r_num = strtof(lexeme, NULL);
             return token;
         }
         case 49:
@@ -1018,6 +1058,18 @@ TokenName *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_FUNID;
+            nodeInfo *n = getInfo(symbolTable, lexeme);
+            if (n->is_present)
+            {
+                token->name = n->node->tokentype;
+                return token;
+            }
+            else
+            {
+                addSymbol(symbolTable, token, lineno);
+                return token;
+            }
+            return token;
         }
         case 53:
         {
@@ -1030,11 +1082,13 @@ TokenName *getNextToken(FILE *fileptr)
             if (is2to7(c))
             {
                 state = 54;
+                varlength++;
                 fwdptr++;
             }
             else if (isalphabet(c))
             {
                 state = 57;
+                varlength++;
                 fwdptr++;
             }
             else
@@ -1053,11 +1107,13 @@ TokenName *getNextToken(FILE *fileptr)
             if (c == 'b' || c == 'c' || c == 'd')
             {
                 state = 54;
+                varlength++;
                 fwdptr++;
             }
             else if (is2to7(c))
             {
                 state = 55;
+                varlength++;
                 fwdptr++;
             }
             else
@@ -1088,7 +1144,27 @@ TokenName *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_ID;
-            return token;
+            if (varlength >= 2 && varlength <= 20)
+            {
+                nodeInfo *n = getInfo(symbolTable, lexeme);
+                if (n->is_present)
+                {
+                    token->name = n->node->tokentype;
+                    return token;
+                }
+                else
+                {
+                    addSymbol(symbolTable, token, lineno);
+                    return token;
+                }
+                return token;
+            }
+            else
+            {
+                state = 60;
+                errtype = 1;
+            }
+            break;
             // note
         }
         case 57:
@@ -1114,8 +1190,17 @@ TokenName *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_FIELDID;
-            // note
-            return token;
+            nodeInfo *n = getInfo(symbolTable, lexeme);
+            if (n->is_present)
+            {
+                token->name = n->node->tokentype;
+                return token;
+            }
+            else
+            {
+                addSymbol(symbolTable, token, lineno);
+                return token;
+            }
         }
         case 59:
         {
@@ -1126,7 +1211,17 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 60:
         {
-            printf("Error at lineno : %d.\nThis is not a valid token : %s", lineno, lexeme);
+
+            printf("Error at lineno : %d\n", lineno);
+            if (errtype == 0)
+            {
+                printf("\nThis is not a valid token : %s \n", lexeme);
+            }
+            else
+            {
+                printf("Variable length should be between 2 and 20.\n Length of variable '%s' is %d \n", lexeme, varlength);
+            }
+            return NULL;
         }
         }
     }

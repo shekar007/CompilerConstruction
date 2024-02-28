@@ -59,7 +59,8 @@ typedef enum
     TK_EQ,
     TK_GT,
     TK_GE,
-    TK_NE
+    TK_NE,
+    EPSILON
 } TokenName;
 
 typedef union
@@ -73,4 +74,5 @@ typedef struct token
     TokenName *name;
     char *lexeme;
     Value *value;
+    bool isint;
 } Token;

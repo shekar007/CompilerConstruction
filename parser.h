@@ -5,7 +5,7 @@
 #include "lexerDef.h"
 #include "parserDef.h"
 
-firstAndFollow *computeFirstAndFollowSets(Grammar G);
-void createParseTable(firstAndFollow F, Table T);
+FirstAndFollow *computeFirstAndFollowSets(Grammar G);
+void createParseTable(FirstAndFollow F, Grammar G, Table T);
 parseTree *parseInputSourceCode(char *testcaseFile, Table T);
 void printParseTree(parseTree *PT, char *outfile);

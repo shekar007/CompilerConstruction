@@ -4,44 +4,46 @@
 #include <string.h>
 
 #include "lexerDef.h"
+#include "definitions.h"
 
 //@aaradhya create struct for grammar and write computeFirstAndFollowSets function
 //@aadit struct for parse table and write createParseTable function
-
+// enum,union -> camelcase
+// struct -> pascalca //bol
+// Grammar->rules->rule->symbolList->symbolNode linked list is required cuz we need to add symbols
 typedef union
 {
     TokenName terminal;
-    nonTerminal nonterminal;
+    nonTerminal non_terminal;
 } symbolType;
 
 typedef struct symbolNode
 {
     symbolType type;
-    struct symbolNode *next;
+    bool isTerm;
 } SymbolNode;
 
 typedef struct symbolList
 {
-
     SymbolNode *head;
-    int length;
+    SymbolNode *tail;
+    int productionLength;
 } SymbolList;
 
 typedef struct rule
 {
-    nonTerminal nonterminal;
-    SymbolList *symbols;
+    SymbolList *product;
     Rule *next;
     int ruleNo;
 } Rule;
 typedef struct rules
 {
-    Rule *head;
-    int length;
+    Rule *rulePtr;
+    int numVariableProductions;
 } Rules;
 typedef struct grammar
 {
-    int noOfRules;
+    int numOfRules;
     Rules **rules;
 } Grammar;
 typedef enum
@@ -90,22 +92,38 @@ typedef enum
     A
 } nonTerminal;
 
+typedef struct tokenListNode
+{
+    TokenName name;
+    TokenListNode *next;
+} TokenListNode;
+typedef struct tokenList
+{
+    int setSize;
+    TokenListNode *head;
+    TokenListNode *tail;
+} TokenList;
 typedef struct ffSingleNode
 {
-    nonTerminal *name;     // name of non terminal this struct stores data of
-    TokenName **firstSet;  // list of token names in first set
-    TokenName **followSet; // list of token names in follow set
-    ffSingleNode *next;    // storing address of next node in linked list
+    nonTerminal *name;    // name of non terminal this struct stores data of
+    TokenList *firstSet;  // list of token names in first set
+    TokenList *followSet; // list of token names in follow set
+    ffSingleNode *next;   // storing address of next node in linked list
 } ffSingleNode;
 
 // firstAndFollow is implemented as a hash table with the key being the name of the non-terminal.
 // Conflict (hashing to same value) is resolved using linked list.
+// Changing name to firstAndFollowSets to match specifications
 typedef struct firstAndFollow
 {
-    int no_slots;
-    ffSingleNode **sets;
-} firstAndFollow;
+    ffSingleNode **table;
+} FirstAndFollow;
 
-typedef struct Table
+typedef struct table // parse table
 {
-};
+    int numOfNonTerminals;
+    int numTerminals;
+
+    Rule **table[NO_OF_NONTERMINALS][NO_OF_TERMINALS];
+
+} Table;

@@ -6,7 +6,7 @@
 
 #include "symbolTableDef.h"
 
-int hashFunction(char* value, int no_entries);
-symTable * createEmptyTable(int no_lists);
-void addSymbol(symTable * lookupTable, char * tokenName, tokenType type, char * lexeme, int rowNumber);
-nodeInfo * getInfo(symTable * lookupTable, char * lexeme);
+int hashFunction(char *value, int no_entries);
+symTable *createEmptyTable(int no_lists);
+void addSymbol(symTable *lookupTable, Token *t, int lineno);
+nodeInfo *getInfo(symTable *lookupTable, char *lexeme);

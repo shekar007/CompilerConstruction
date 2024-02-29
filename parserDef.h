@@ -20,6 +20,7 @@ typedef union
 typedef struct symbolNode
 {
     symbolType type;
+    SymbolNode *next;
     bool isTerm;
 } SymbolNode;
 

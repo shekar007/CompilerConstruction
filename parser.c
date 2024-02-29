@@ -11,7 +11,7 @@
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
-    G->noOfRules = 0;
+    G->numOfRules = 0;
     G->rules = (Rules **)malloc(sizeof(Rules *) * NO_OF_NONTERMINALS);
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
@@ -30,12 +30,9 @@ SymbolList *allocSymbolList()
 }
 void appendSymbolList(SymbolList *L, SymbolNode *node)
 {
-    if (L->head == NULL)
-    {
+    if(L->head==NULL){
         L->head = node;
-    }
-    else
-    {
+    }else{
         L->tail->next = node;
     }
     L->tail = node;
@@ -62,7 +59,7 @@ SymbolNode *allocSymbol(int enumIndex, bool isTerm)
     }
     else
     {
-        T.nonterminal = (nonTerminal)enumIndex;
+        T.non_terminal = (nonTerminal)enumIndex;
     }
     S->type = T;
     S->isTerm = isTerm;
@@ -157,11 +154,18 @@ void addSets(TokenList *set1, TokenList *set2, bool isFollowSet)
     }
     resetTailSet(set1);
 }
+ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V){
+    for(int i = 0; i < NO_OF_NONTERMINALS; i++){
+        if(F->table[i]->name==V) {
+            return F->table[i];
+        }
+    }
 
+}
 // hash table ki tarah karna hai kya?
 // lamba padhega but bahut
 
-void computeFirst(Grammar *G, nonTerminal V, ffSingleNode *node)
+void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
 {
     Rules *V_productions = G->rules[V];
     Rule *V_production = V_productions->rulePtr; // pointer to first V production
@@ -170,8 +174,7 @@ void computeFirst(Grammar *G, nonTerminal V, ffSingleNode *node)
     {
         SymbolList *S = V_production->product;
         SymbolNode *temp = S->head; // first symbol in symbolList
-        TokenList *M =
-            for (int j = 0; j < S->productionLength; j++)
+        for (int j = 0; j < S->productionLength; j++)
         {
 
             if (temp->isTerm)
@@ -181,10 +184,13 @@ void computeFirst(Grammar *G, nonTerminal V, ffSingleNode *node)
             }
             else
             {
-                computeFirst(G, temp->type.non_terminal, node);
-                addSets(L, )
+                TokenList *set2 = findFFSymbolNode(F,temp->type.non_terminal)->firstSet;
+                computeFirst(G, F, temp->type.non_terminal, node);
+                addSets(L,set2,false);
+                if(!isNodeInSet(set2,EPSILON))break;
             }
         }
+        temp = temp->next;
     }
     return;
 }

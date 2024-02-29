@@ -1,11 +1,10 @@
 /*
 
-1. double retraction handle karna hai
+1. double retraction handle karna hai - done
 2. values of variables and numbers - done
-3. buffer retraction case
+3. buffer retraction case - done
 4. variable length case - Done
-5. add to symbol table using addSymbol function
-6. restrict varibale length
+5. add to symbol table using addSymbol function - done
 
 */
 // include statements
@@ -27,9 +26,11 @@ typedef struct twinBuffer
 twinBuffer *buffer;
 bool bufferChoice;
 symTable *symbolTable;
+int flagdr = 0;
 int fwdptr = 0;
 int varlength = 0;
 int lineno = 0;
+int funidlength = 0;
 bool isnum(char c)
 {
     if (c >= '0' && c <= '9')
@@ -73,6 +74,13 @@ char *currentBuffer(twinBuffer *buffer)
 
 FILE *getStream(FILE *fp)
 {
+    if (flagdr == 1)
+    {
+        flagdr = 0;
+        bufferChoice = !bufferChoice;
+        fwdptr = 0;
+        return fp;
+    }
     if (bufferChoice == true)
     {
         memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
@@ -161,9 +169,9 @@ TokenName *getNextToken(FILE *fileptr)
     memset(lexeme, '\0', 50);
     int lex_ptr = 0;
     varlength = 0;
+    funidlength = 0;
     int errtype = 0;
     char prev;
-
     while (true)
     {
         switch (state)
@@ -331,6 +339,7 @@ TokenName *getNextToken(FILE *fileptr)
             else if (currentBuffer(buffer)[fwdptr] == '_')
             {
                 state = 49;
+                funidlength++;
                 fwdptr++;
             }
 
@@ -867,13 +876,35 @@ TokenName *getNextToken(FILE *fileptr)
             }
             else
             {
-                // double retraction
+                state = 41;
+                prev = c;
+                fwdptr++;
             }
         }
         case 41:
         {
-            // double retraction
-            // note
+            lexeme[lex_ptr] = prev;
+            int l = strlen(lexeme);
+            char *double_retracted_string = (char *)malloc(l - 1);
+            strncpy(double_retracted_string, lexeme, l - 2);
+            double_retracted_string[l - 2] = '\0'; // Null terminate the string
+            token->value->num = atoi(lexeme);
+            token->isint = 1;
+            token->name = TK_NUM;
+            free(double_retracted_string);
+            for (int i = 0; i < 2; i++)
+            {
+                if (fwdptr > 0)
+                {
+                    fwdptr--;
+                }
+                else
+                {
+                    fwdptr = BUFFER_SIZE - 1;
+                }
+            }
+            flagdr = 1;
+            return token;
         }
         case 42:
         {
@@ -1001,6 +1032,7 @@ TokenName *getNextToken(FILE *fileptr)
             if (isIgnoreCaseAlphabet(c))
             {
                 state = 50;
+                funidlength++;
                 fwdptr++;
             }
             else
@@ -1019,17 +1051,18 @@ TokenName *getNextToken(FILE *fileptr)
             if (isIgnoreCaseAlphabet(c))
             {
                 state = 50;
+                funidlength++;
                 fwdptr++;
             }
             else if (isnum(c))
             {
                 state = 51;
+                funidlength++;
                 fwdptr++;
             }
             else
             {
                 state = 52;
-                fwdptr++;
             }
             break;
         }
@@ -1043,13 +1076,14 @@ TokenName *getNextToken(FILE *fileptr)
             if (isnum(c))
             {
                 state = 51;
+                funidlength++;
                 fwdptr++;
             }
             else
             {
                 state = 52;
-                fwdptr++;
             }
+
             break;
         }
         case 52:
@@ -1058,18 +1092,26 @@ TokenName *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_FUNID;
-            nodeInfo *n = getInfo(symbolTable, lexeme);
-            if (n->is_present)
+            if (!strlen(lexeme) <= 30)
             {
-                token->name = n->node->tokentype;
-                return token;
+                state = 60;
+                errtype = 1;
+                break;
             }
             else
             {
-                addSymbol(symbolTable, token, lineno);
-                return token;
+                nodeInfo *n = getInfo(symbolTable, lexeme);
+                if (n->is_present)
+                {
+                    token->name = n->node->tokentype;
+                    return token;
+                }
+                else
+                {
+                    addSymbol(symbolTable, token, lineno);
+                    return token;
+                }
             }
-            return token;
         }
         case 53:
         {

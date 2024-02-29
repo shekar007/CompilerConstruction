@@ -170,8 +170,9 @@ void computeFirst(Grammar *G, nonTerminal V, ffSingleNode *node)
     {
         SymbolList *S = V_production->product;
         SymbolNode *temp = S->head; // first symbol in symbolList
-        TokenList *M =
-            for (int j = 0; j < S->productionLength; j++)
+        // continue
+
+        for (int j = 0; j < S->productionLength; j++)
         {
 
             if (temp->isTerm)

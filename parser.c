@@ -139,12 +139,12 @@ bool isNodeInSet(TokenList *L, TokenListNode *node)
     return false;
 }
 
-void addSets(TokenList *set1, TokenList *set2, bool isFollowSet)
+void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
 {
     TokenListNode *set2_head = set2->head;
     while (set2_head != NULL)
     {
-        if (set2_head->name == EPSILON && isFollowSet)
+        if (set2_head->name == EPSILON && !addEpsilon)
             continue;
         if (!isNodeInSet(set1, set2_head))
         {
@@ -174,7 +174,8 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
     {
         SymbolList *S = V_production->product;
         SymbolNode *temp = S->head; // first symbol in symbolList
-        for (int j = 0; j < S->productionLength; j++)
+        int j = 0;
+        for (j = 0; j < S->productionLength; j++)
         {
 
             if (temp->isTerm)
@@ -184,16 +185,21 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             }
             else
             {
-                TokenList *set2 = findFFSymbolNode(F,temp->type.non_terminal)->firstSet;
-                computeFirst(G, F, temp->type.non_terminal, node);
+                ffSingleNode *node2 = findFFSymbolNode(F,temp->type.non_terminal);
+                TokenList *set2 = node2->firstSet;
+                computeFirst(G, F, temp->type.non_terminal, node2);
                 addSets(L,set2,false);
                 if(!isNodeInSet(set2,EPSILON))break;
             }
+        }
+        if(j==S->productionLength){
+            appendNodeSet(L,createTokenNode(EPSILON));
         }
         temp = temp->next;
     }
     return;
 }
+void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V);
 
 
 bool contains_eps(TokenList *T)

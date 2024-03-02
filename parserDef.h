@@ -50,7 +50,7 @@ typedef enum
     conditionalStmt,
     ioStmt,
     arithmeticExpression,
-    operators,
+    operator,
     booleanExpression,
     var,
     logicalOp,

@@ -429,36 +429,53 @@ Grammar *generateGrammar(FILE *fp)
     int chars_read = 0;
     while (fgets(line, 200 * sizeof(char), fp))
     {
-        if (sscanf(line, "<%99[^>]> ", lhs) == 1)
+        if (sscanf(line, " <%99[^>]> ", lhs) == 1)
         {
             nonTerminal V = stringToNonTerminal(lhs);
-            printf("variable:%d", V);
             Rules *V_productions = G->rules[(int)V];
-            char *rhsPtr = line + strlen(lhs) + 6;
-            printf("reading lhs:%s\n", lhs);
-            // while (sscanf(rhsPtr, " %99[^|\n]", rhs) == 1)
-            // {
+            char *rhsPtr = line + strlen(lhs) + 2;
+            while (*rhsPtr == ' ')
+                rhsPtr++;
+            rhsPtr += 4;
+            while (*rhsPtr == ' ')
+                rhsPtr++;
+            while (sscanf(rhsPtr, " %99[^|\n] ", rhs) == 1)
+            {
 
-            //     int ruleNo = V_productions->numVariableProductions + 1;
-            //     printf("Reading rule:%s\n",rhs);
-            //     rhsPtr += strlen(rhs)+1;
-            //     Rule *newRule = allocRule(ruleNo);
-            //     while (sscanf(rhs, " %s ", symbol) == 1)
-            //     {
-
-            //         if (symbol[0] == '<')
-            //         {
-            //             nonTerminal temp = stringToNonTerminal(symbol);
-            //             appendSymbolList(newRule->product, allocSymbol(temp, false));
-            //         }
-            //         else
-            //         {
-            //             TokenName temp = stringToTokenName(symbol);
-            //             appendSymbolList(newRule->product, allocSymbol(temp, true));
-            //         }
-            //     }
-            //     appendRuleGrammar(G,V,newRule);
-            // }
+                int ruleNo = V_productions->numVariableProductions + 1;
+                rhsPtr += strlen(rhs) + 1;
+                Rule *newRule = allocRule(ruleNo);
+                char *symPtr = rhs;
+                while (sscanf(symPtr, " %50[^ ]", symbol) == 1)
+                {
+                    symPtr += strlen(symbol);
+                    while (*symPtr == ' ')
+                        symPtr++;
+                    if (symbol[0] == '<')
+                    {
+                        char substr[50];
+                        for (int i = 0; i < strlen(symbol); i++)
+                        {
+                            if (symbol[i + 1] == '>')
+                            {
+                                substr[i] = '\0';
+                                break;
+                            }
+                            substr[i] = symbol[i + 1];
+                        }
+                        nonTerminal temp = stringToNonTerminal(substr);
+                        appendSymbolList(newRule->product, allocSymbol(temp, false));
+                        printf("N:%d\n", temp);
+                    }
+                    else
+                    {
+                        TokenName temp = stringToTokenName(symbol);
+                        appendSymbolList(newRule->product, allocSymbol(temp, true));
+                        printf("T:%d\n", temp);
+                    }
+                }
+                appendRuleGrammar(G, V, newRule);
+            }
         }
     }
     return G;
@@ -466,12 +483,23 @@ Grammar *generateGrammar(FILE *fp)
 void printGrammar(Grammar *G)
 {
     Rules **R = G->rules;
-
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
-        Rule *temp = G->rules[i]->rulePtr;
-        SymbolList *list = temp->product;
-        printf("%d", list->head->type.non_terminal);
+        Rule *cur_rule = G->rules[i]->rulePtr;
+        while(cur_rule!=NULL){
+            printf("NT:%d--->",i);
+            SymbolList *list = cur_rule->product;
+            SymbolNode *temp = list->head;
+            while(temp!=NULL){
+                if(temp->isTerm){
+                    printf("%d",temp->type.terminal);
+                }else{
+                    printf("%d",temp->type.non_terminal);
+                }
+                temp = temp->next;
+            }
+            cur_rule = cur_rule->next;
+        }
     }
 }
 int main()
@@ -482,6 +510,7 @@ int main()
         printf("failed to open file\n");
     }
     Grammar *G = generateGrammar(fp);
+    // printGrammar(G);
 }
 Grammar *allocGrammar()
 {
@@ -545,9 +574,10 @@ SymbolNode *allocSymbol(int enumIndex, bool isTerm)
 void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R)
 {
     G->numOfRules++;
-    G->rules[V]->numVariableProductions++;
-    R->next = NULL;
-    G->rules[V]->rulePtr = R;
+    G->rules[(int)V]->numVariableProductions++;
+    Rule *temp = G->rules[(int)V]->rulePtr;
+    while(temp->next!=NULL)temp = temp->next;
+    temp->next = R;
 }
 
 TokenListNode *createTokenNode(TokenName name)

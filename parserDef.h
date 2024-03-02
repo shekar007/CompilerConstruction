@@ -1,3 +1,5 @@
+#ifndef PARSERDEF_H
+#define PARSERDEF_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,42 +13,10 @@
 // enum,union -> camelcase
 // struct -> pascalca //bol
 // Grammar->rules->rule->symbolList->symbolNode linked list is required cuz we need to add symbols
-typedef union
-{
-    TokenName terminal;
-    nonTerminal non_terminal;
-} symbolType;
-
-typedef struct symbolNode
-{
-    symbolType type;
-    SymbolNode *next;
-    bool isTerm;
-} SymbolNode;
-
-typedef struct symbolList
-{
-    SymbolNode *head;
-    SymbolNode *tail;
-    int productionLength;
-} SymbolList;
-
-typedef struct rule
-{
-    SymbolList *product;
-    Rule *next;
-    int ruleNo;
-} Rule;
-typedef struct rules
-{
-    Rule *rulePtr;
-    int numVariableProductions;
-} Rules;
-typedef struct grammar
-{
-    int numOfRules;
-    Rules **rules;
-} Grammar;
+// union symbolType;
+// struct symbolNode;
+// struct symbolList;
+// struct rule;
 typedef enum
 {
     program,
@@ -80,7 +50,7 @@ typedef enum
     conditionalStmt,
     ioStmt,
     arithmeticExpression,
-    operators, // operator changed to operators
+    operators,
     booleanExpression,
     var,
     logicalOp,
@@ -93,10 +63,48 @@ typedef enum
     A
 } nonTerminal;
 
+typedef union
+{
+    TokenName terminal;
+    nonTerminal non_terminal;
+} symbolType;
+
+typedef struct symbolNode
+{
+    symbolType type;
+    struct symbolNode *next;
+    bool isTerm;
+} SymbolNode;
+
+typedef struct symbolList
+{
+    SymbolNode *head;
+    SymbolNode *tail;
+    int productionLength;
+} SymbolList;
+
+typedef struct rule
+{
+    SymbolList *product;
+    struct rule *next;
+    int ruleNo;
+} Rule;
+typedef struct rules
+{
+    Rule *rulePtr;
+    int numVariableProductions;
+} Rules;
+typedef struct grammar
+{
+    int numOfRules;
+    Rules **rules;
+} Grammar;
+
+
 typedef struct tokenListNode
 {
     TokenName name;
-    TokenListNode *next;
+    struct tokenListNode *next;
 } TokenListNode;
 typedef struct tokenList
 {
@@ -106,10 +114,10 @@ typedef struct tokenList
 } TokenList;
 typedef struct ffSingleNode
 {
-    nonTerminal *name;    // name of non terminal this struct stores data of
-    TokenList *firstSet;  // list of token names in first set
-    TokenList *followSet; // list of token names in follow set
-    ffSingleNode *next;   // storing address of next node in linked list
+    nonTerminal name;         // name of non terminal this struct stores data of
+    TokenList *firstSet;       // list of token names in first set
+    TokenList *followSet;      // list of token names in follow set
+    struct ffSingleNode *next; // storing address of next node in linked list
 } ffSingleNode;
 
 // firstAndFollow is implemented as a hash table with the key being the name of the non-terminal.
@@ -128,3 +136,4 @@ typedef struct table // parse table
     Rule **table[NO_OF_NONTERMINALS][NO_OF_TERMINALS];
 
 } Table;
+#endif

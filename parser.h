@@ -1,3 +1,5 @@
+#ifndef PARSER_H
+#define PARSER_H
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,7 +11,7 @@ FirstAndFollow *computeFirstAndFollowSets(Grammar G);
 Grammar *allocGrammar();
 SymbolList *allocSymbolList();
 TokenList *allocTokenList();
-Rules *allocRules(int *ruleNo);
+Rule *allocRule(int ruleNo);
 SymbolNode *allocSymbol(int enumIndex, bool isTerm);
 void allocSets(FirstAndFollow *F);
 void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R);
@@ -23,5 +25,6 @@ ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V);
 TokenListNode *createTokenNode(TokenName name);
 void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node);
 void createParseTable(FirstAndFollow F, Grammar G, Table T);
-parseTree *parseInputSourceCode(char *testcaseFile, Table T);
-void printParseTree(parseTree *PT, char *outfile);
+// parseTree *parseInputSourceCode(char *testcaseFile, Table T);
+// void printParseTree(parseTree *PT, char *outfile);
+#endif

@@ -5,9 +5,482 @@
 #include <math.h>
 
 #include "parser.h"
+#include "parserDef.h"
 #include "lexer.h"
 #include "lexerDef.h"
+TokenName stringToTokenName(char *str)
+{
+    if (strcmp(str, "TK_ASSIGNOP") == 0)
+    {
+        return TK_ASSIGNOP;
+    }
+    else if (strcmp(str, "TK_COMMENT") == 0)
+    {
+        return TK_COMMENT;
+    }
+    else if (strcmp(str, "TK_FIELDID") == 0)
+    {
+        return TK_FIELDID;
+    }
+    else if (strcmp(str, "TK_ID") == 0)
+    {
+        return TK_ID;
+    }
+    else if (strcmp(str, "TK_NUM") == 0)
+    {
+        return TK_NUM;
+    }
+    else if (strcmp(str, "TK_RNUM") == 0)
+    {
+        return TK_RNUM;
+    }
+    else if (strcmp(str, "TK_FUNID") == 0)
+    {
+        return TK_FUNID;
+    }
+    else if (strcmp(str, "TK_RUID") == 0)
+    {
+        return TK_RUID;
+    }
+    else if (strcmp(str, "TK_WITH") == 0)
+    {
+        return TK_WITH;
+    }
+    else if (strcmp(str, "TK_PARAMETERS") == 0)
+    {
+        return TK_PARAMETERS;
+    }
+    else if (strcmp(str, "TK_END") == 0)
+    {
+        return TK_END;
+    }
+    else if (strcmp(str, "TK_WHILE") == 0)
+    {
+        return TK_WHILE;
+    }
+    else if (strcmp(str, "TK_UNION") == 0)
+    {
+        return TK_UNION;
+    }
+    else if (strcmp(str, "TK_ENDUNION") == 0)
+    {
+        return TK_ENDUNION;
+    }
+    else if (strcmp(str, "TK_DEFINETYPE") == 0)
+    {
+        return TK_DEFINETYPE;
+    }
+    else if (strcmp(str, "TK_AS") == 0)
+    {
+        return TK_AS;
+    }
+    else if (strcmp(str, "TK_TYPE") == 0)
+    {
+        return TK_TYPE;
+    }
+    else if (strcmp(str, "TK_MAIN") == 0)
+    {
+        return TK_MAIN;
+    }
+    else if (strcmp(str, "TK_GLOBAL") == 0)
+    {
+        return TK_GLOBAL;
+    }
+    else if (strcmp(str, "TK_PARAMETER") == 0)
+    {
+        return TK_PARAMETER;
+    }
+    else if (strcmp(str, "TK_LIST") == 0)
+    {
+        return TK_LIST;
+    }
+    else if (strcmp(str, "TK_SQL") == 0)
+    {
+        return TK_SQL;
+    }
+    else if (strcmp(str, "TK_SQR") == 0)
+    {
+        return TK_SQR;
+    }
+    else if (strcmp(str, "TK_INPUT") == 0)
+    {
+        return TK_INPUT;
+    }
+    else if (strcmp(str, "TK_OUTPUT") == 0)
+    {
+        return TK_OUTPUT;
+    }
+    else if (strcmp(str, "TK_INT") == 0)
+    {
+        return TK_INT;
+    }
+    else if (strcmp(str, "TK_REAL") == 0)
+    {
+        return TK_REAL;
+    }
+    else if (strcmp(str, "TK_COMMA") == 0)
+    {
+        return TK_COMMA;
+    }
+    else if (strcmp(str, "TK_SEM") == 0)
+    {
+        return TK_SEM;
+    }
+    else if (strcmp(str, "TK_COLON") == 0)
+    {
+        return TK_COLON;
+    }
+    else if (strcmp(str, "TK_DOT") == 0)
+    {
+        return TK_DOT;
+    }
+    else if (strcmp(str, "TK_ENDWHILE") == 0)
+    {
+        return TK_ENDWHILE;
+    }
+    else if (strcmp(str, "TK_OP") == 0)
+    {
+        return TK_OP;
+    }
+    else if (strcmp(str, "TK_CL") == 0)
+    {
+        return TK_CL;
+    }
+    else if (strcmp(str, "TK_IF") == 0)
+    {
+        return TK_IF;
+    }
+    else if (strcmp(str, "TK_THEN") == 0)
+    {
+        return TK_THEN;
+    }
+    else if (strcmp(str, "TK_ENDIF") == 0)
+    {
+        return TK_ENDIF;
+    }
+    else if (strcmp(str, "TK_READ") == 0)
+    {
+        return TK_READ;
+    }
+    else if (strcmp(str, "TK_WRITE") == 0)
+    {
+        return TK_WRITE;
+    }
+    else if (strcmp(str, "TK_RETURN") == 0)
+    {
+        return TK_RETURN;
+    }
+    else if (strcmp(str, "TK_PLUS") == 0)
+    {
+        return TK_PLUS;
+    }
+    else if (strcmp(str, "TK_MINUS") == 0)
+    {
+        return TK_MINUS;
+    }
+    else if (strcmp(str, "TK_MUL") == 0)
+    {
+        return TK_MUL;
+    }
+    else if (strcmp(str, "TK_DIV") == 0)
+    {
+        return TK_DIV;
+    }
+    else if (strcmp(str, "TK_CALL") == 0)
+    {
+        return TK_CALL;
+    }
+    else if (strcmp(str, "TK_RECORD") == 0)
+    {
+        return TK_RECORD;
+    }
+    else if (strcmp(str, "TK_ENDRECORD") == 0)
+    {
+        return TK_ENDRECORD;
+    }
+    else if (strcmp(str, "TK_ELSE") == 0)
+    {
+        return TK_ELSE;
+    }
+    else if (strcmp(str, "TK_AND") == 0)
+    {
+        return TK_AND;
+    }
+    else if (strcmp(str, "TK_OR") == 0)
+    {
+        return TK_OR;
+    }
+    else if (strcmp(str, "TK_NOT") == 0)
+    {
+        return TK_NOT;
+    }
+    else if (strcmp(str, "TK_LT") == 0)
+    {
+        return TK_LT;
+    }
+    else if (strcmp(str, "TK_LE") == 0)
+    {
+        return TK_LE;
+    }
+    else if (strcmp(str, "TK_EQ") == 0)
+    {
+        return TK_EQ;
+    }
+    else if (strcmp(str, "TK_GT") == 0)
+    {
+        return TK_GT;
+    }
+    else if (strcmp(str, "TK_GE") == 0)
+    {
+        return TK_GE;
+    }
+    else if (strcmp(str, "TK_NE") == 0)
+    {
+        return TK_NE;
+    }
+    else
+    {
+        return EPSILON; // Default value
+    }
+}
+nonTerminal stringToNonTerminal(char *str)
+{
+    if (strcmp(str, "program") == 0)
+    {
+        return program;
+    }
+    else if (strcmp(str, "mainFunction") == 0)
+    {
+        return mainFunction;
+    }
+    else if (strcmp(str, "otherFunctions") == 0)
+    {
+        return otherFunctions;
+    }
+    else if (strcmp(str, "function") == 0)
+    {
+        return function;
+    }
+    else if (strcmp(str, "input_par") == 0)
+    {
+        return input_par;
+    }
+    else if (strcmp(str, "output_par") == 0)
+    {
+        return output_par;
+    }
+    else if (strcmp(str, "parameter_list") == 0)
+    {
+        return parameter_list;
+    }
+    else if (strcmp(str, "data_type") == 0)
+    {
+        return data_type;
+    }
+    else if (strcmp(str, "primitiveDatatype") == 0)
+    {
+        return primitiveDatatype;
+    }
+    else if (strcmp(str, "constructedDatatype") == 0)
+    {
+        return constructedDatatype;
+    }
+    else if (strcmp(str, "remaining_list") == 0)
+    {
+        return remaining_list;
+    }
+    else if (strcmp(str, "stmts") == 0)
+    {
+        return stmts;
+    }
+    else if (strcmp(str, "typeDefinitions") == 0)
+    {
+        return typeDefinitions;
+    }
+    else if (strcmp(str, "typeDefinition") == 0)
+    {
+        return typeDefinition;
+    }
+    else if (strcmp(str, "fieldDefinitions") == 0)
+    {
+        return fieldDefinitions;
+    }
+    else if (strcmp(str, "fieldDefinition") == 0)
+    {
+        return fieldDefinition;
+    }
+    else if (strcmp(str, "moreFields") == 0)
+    {
+        return moreFields;
+    }
+    else if (strcmp(str, "declarations") == 0)
+    {
+        return declarations;
+    }
+    else if (strcmp(str, "declaration") == 0)
+    {
+        return declaration;
+    }
+    else if (strcmp(str, "global_or_not") == 0)
+    {
+        return global_or_not;
+    }
+    else if (strcmp(str, "otherStmts") == 0)
+    {
+        return otherStmts;
+    }
+    else if (strcmp(str, "stmt") == 0)
+    {
+        return stmt;
+    }
+    else if (strcmp(str, "assignmentStmt") == 0)
+    {
+        return assignmentStmt;
+    }
+    else if (strcmp(str, "singleOrRecId") == 0)
+    {
+        return singleOrRecId;
+    }
+    else if (strcmp(str, "funCallStmt") == 0)
+    {
+        return funCallStmt;
+    }
+    else if (strcmp(str, "outputParameters") == 0)
+    {
+        return outputParameters;
+    }
+    else if (strcmp(str, "inputParameters") == 0)
+    {
+        return inputParameters;
+    }
+    else if (strcmp(str, "iterativeStmt") == 0)
+    {
+        return iterativeStmt;
+    }
+    else if (strcmp(str, "conditionalStmt") == 0)
+    {
+        return conditionalStmt;
+    }
+    else if (strcmp(str, "ioStmt") == 0)
+    {
+        return ioStmt;
+    }
+    else if (strcmp(str, "arithmeticExpression") == 0)
+    {
+        return arithmeticExpression;
+    }
+    else if (strcmp(str, "operators") == 0)
+    {
+        return operators;
+    }
+    else if (strcmp(str, "booleanExpression") == 0)
+    {
+        return booleanExpression;
+    }
+    else if (strcmp(str, "var") == 0)
+    {
+        return var;
+    }
+    else if (strcmp(str, "logicalOp") == 0)
+    {
+        return logicalOp;
+    }
+    else if (strcmp(str, "relationalOp") == 0)
+    {
+        return relationalOp;
+    }
+    else if (strcmp(str, "returnStmt") == 0)
+    {
+        return returnStmt;
+    }
+    else if (strcmp(str, "optionalReturn") == 0)
+    {
+        return optionalReturn;
+    }
+    else if (strcmp(str, "idList") == 0)
+    {
+        return idList;
+    }
+    else if (strcmp(str, "more_ids") == 0)
+    {
+        return more_ids;
+    }
+    else if (strcmp(str, "definetypestmt") == 0)
+    {
+        return definetypestmt;
+    }
+    else if (strcmp(str, "A") == 0)
+    {
+        return A;
+    }
+    else
+    {
+        return -1;
+    }
+}
+#define LINE_SIZE 200 * sizeof(char)
+Grammar *generateGrammar(FILE *fp)
+{
+    Grammar *G = allocGrammar();
+    char *line = (char *)malloc(200 * sizeof(char));
+    char *lhs = (char *)malloc(100 * sizeof(char));
+    char *rhs = (char *)malloc(100 * sizeof(char));
+    char *symbol = (char *)malloc(50 * sizeof(char));
+    int chars_read = 0;
+    while (fgets(line, 200 * sizeof(char), fp))
+    {
+        if(sscanf(line, "<%99[^>]> ", lhs)==1){
+            nonTerminal V = stringToNonTerminal(lhs);
+            Rules *V_productions = G->rules[V];
+            // char *rhsPtr = line + strlen(lhs)+6;
+            printf("reading lhs:%s", lhs);
+            // while (sscanf(rhsPtr, " %99[^|\n]", rhs) == 1)
+            // {
 
+            //     int ruleNo = V_productions->numVariableProductions + 1;
+            //     printf("Reading rule:%s\n",rhs);
+            //     rhsPtr += strlen(rhs)+1;
+            //     Rule *newRule = allocRule(ruleNo);
+            //     while (sscanf(rhs, " %s ", symbol) == 1)
+            //     {
+
+            //         if (symbol[0] == '<')
+            //         {
+            //             nonTerminal temp = stringToNonTerminal(symbol);
+            //             appendSymbolList(newRule->product, allocSymbol(temp, false));
+            //         }
+            //         else
+            //         {
+            //             TokenName temp = stringToTokenName(symbol);
+            //             appendSymbolList(newRule->product, allocSymbol(temp, true));
+            //         }
+            //     }
+            //     appendRuleGrammar(G,V,newRule);
+            // }
+        }
+    }
+    return G;
+}
+void printGrammar(Grammar *G)
+{
+    Rules **R = G->rules;
+
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        Rule *temp = G->rules[i]->rulePtr;
+        SymbolList *list = temp->product;
+        printf("%d", list->head->type.non_terminal);
+    }
+}
+int main()
+{
+    FILE *fp = fopen("modified_grammar.txt", "r");
+    if (fp == NULL)
+    {
+        printf("failed to open file\n");
+    }
+    Grammar *G = generateGrammar(fp);
+}
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
@@ -30,21 +503,23 @@ SymbolList *allocSymbolList()
 }
 void appendSymbolList(SymbolList *L, SymbolNode *node)
 {
-    if(L->head==NULL){
+    if (L->head == NULL)
+    {
         L->head = node;
-    }else{
+    }
+    else
+    {
         L->tail->next = node;
     }
     L->tail = node;
 }
 
-Rules *allocRules(int *ruleNo)
+Rule *allocRule(int ruleNo)
 {
     Rule *newRule = (Rule *)malloc(sizeof(Rule));
     newRule->next = NULL;
     newRule->product = allocSymbolList();
-    newRule->ruleNo = *ruleNo;
-    *ruleNo++;
+    newRule->ruleNo = ruleNo;
     return newRule;
 }
 // structure change kiya
@@ -69,7 +544,7 @@ void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R)
 {
     G->numOfRules++;
     G->rules[V]->numVariableProductions++;
-    R->next = G->rules[V]->rulePtr = R;
+    R->next = NULL;
     G->rules[V]->rulePtr = R;
 }
 
@@ -154,13 +629,15 @@ void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
     }
     resetTailSet(set1);
 }
-ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V){
-    for(int i = 0; i < NO_OF_NONTERMINALS; i++){
-        if(F->table[i]->name==V) {
+ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V)
+{
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        if (F->table[i]->name == V)
+        {
             return F->table[i];
         }
     }
-
 }
 // hash table ki tarah karna hai kya?
 // lamba padhega but bahut
@@ -185,22 +662,23 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             }
             else
             {
-                ffSingleNode *node2 = findFFSymbolNode(F,temp->type.non_terminal);
+                ffSingleNode *node2 = findFFSymbolNode(F, temp->type.non_terminal);
                 TokenList *set2 = node2->firstSet;
                 computeFirst(G, F, temp->type.non_terminal, node2);
-                addSets(L,set2,false);
-                if(!isNodeInSet(set2,EPSILON))break;
+                addSets(L, set2, false);
+                if (!isNodeInSet(set2, createTokenNode(EPSILON)))
+                    break;
             }
         }
-        if(j==S->productionLength){
-            appendNodeSet(L,createTokenNode(EPSILON));
+        if (j == S->productionLength)
+        {
+            appendNodeSet(L, createTokenNode(EPSILON));
         }
         temp = temp->next;
     }
     return;
 }
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V);
-
 
 bool contains_eps(TokenList *T)
 {
@@ -216,41 +694,41 @@ bool contains_eps(TokenList *T)
     }
 }
 
-TokenList *returnFirst(FirstAndFollow *F, Rule *R)
-{
+// TokenList *returnFirst(FirstAndFollow *F, Rule *R)
+// {
 
-    TokenList *firstSet = (TokenList *)malloc(sizeof(TokenList));
-    firstSet->setSize = 0;
-    Symbol *curr = R->symbols->symbols;
+//     TokenList *firstSet = (TokenList *)malloc(sizeof(TokenList));
+//     firstSet->setSize = 0;
+//     Symbol *curr = R->symbols->symbols;
 
-    TokenListNode *prev = (TokenListNode *)malloc(sizeof(TokenListNode));
-    firstSet->head = prev;
+//     TokenListNode *prev = (TokenListNode *)malloc(sizeof(TokenListNode));
+//     firstSet->head = prev;
 
-    while (true)
-    {
+//     while (true)
+//     {
 
-        TokenListNode *temp = (TokenListNode *)malloc(sizeof(TokenListNode));
+//         TokenListNode *temp = (TokenListNode *)malloc(sizeof(TokenListNode));
 
-        if (curr->isTerm)
-        {
-            prev->next = temp;
-            prev->name = curr->type.terminal;
-            firstSet->setSize++;
-            break;
-        }
+//         if (curr->isTerm)
+//         {
+//             prev->next = temp;
+//             prev->name = curr->type.terminal;
+//             firstSet->setSize++;
+//             break;
+//         }
 
-        else if (!curr->isTerm)
-        {
-            ffSingleNode *ff = F->table[curr->type.nonterminal];
-            prev->next = ff->firstSet->head;
-            firstSet->setSize += ff->firstSet->setSize;
-        }
-    }
-}
+//         else if (!curr->isTerm)
+//         {
+//             ffSingleNode *ff = F->table[curr->type.nonterminal];
+//             prev->next = ff->firstSet->head;
+//             firstSet->setSize += ff->firstSet->setSize;
+//         }
+//     }
+// }
 
 // function required to read grammar from text file
 
-void createParseTable(FirstAndFollow F, Grammar G, Table *T)
-{
-}
+// void createParseTable(FirstAndFollow F, Grammar G, Table *T)
+// {
+// }
 // parseDef mai kya red dikha raha. suggestions han ab done hone band ho gye uski vajah se

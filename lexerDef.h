@@ -1,3 +1,5 @@
+#ifndef LEXERDEF_H
+#define LEXERDEF_H
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -76,3 +78,4 @@ typedef struct token
     Value *value;
     bool isint;
 } Token;
+#endif

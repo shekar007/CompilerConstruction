@@ -8,6 +8,7 @@
 #include "parserDef.h"
 #include "lexer.h"
 #include "lexerDef.h"
+#define LINE_SIZE 200 * sizeof(char)
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -273,9 +274,9 @@ nonTerminal stringToNonTerminal(char *str)
     {
         return parameter_list;
     }
-    else if (strcmp(str, "data_type") == 0)
+    else if (strcmp(str, "dataType") == 0)
     {
-        return data_type;
+        return dataType;
     }
     else if (strcmp(str, "primitiveDatatype") == 0)
     {
@@ -418,7 +419,6 @@ nonTerminal stringToNonTerminal(char *str)
         return -1;
     }
 }
-#define LINE_SIZE 200 * sizeof(char)
 Grammar *generateGrammar(FILE *fp)
 {
     Grammar *G = allocGrammar();
@@ -429,11 +429,13 @@ Grammar *generateGrammar(FILE *fp)
     int chars_read = 0;
     while (fgets(line, 200 * sizeof(char), fp))
     {
-        if(sscanf(line, "<%99[^>]> ", lhs)==1){
+        if (sscanf(line, "<%99[^>]> ", lhs) == 1)
+        {
             nonTerminal V = stringToNonTerminal(lhs);
-            Rules *V_productions = G->rules[V];
-            // char *rhsPtr = line + strlen(lhs)+6;
-            printf("reading lhs:%s", lhs);
+            printf("variable:%d", V);
+            Rules *V_productions = G->rules[(int)V];
+            char *rhsPtr = line + strlen(lhs) + 6;
+            printf("reading lhs:%s\n", lhs);
             // while (sscanf(rhsPtr, " %99[^|\n]", rhs) == 1)
             // {
 

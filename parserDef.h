@@ -26,7 +26,7 @@ typedef enum
     input_par,
     output_par,
     parameter_list,
-    data_type,
+    dataType,
     primitiveDatatype,
     constructedDatatype,
     remaining_list,

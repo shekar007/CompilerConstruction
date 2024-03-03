@@ -50,7 +50,12 @@ typedef enum
     conditionalStmt,
     ioStmt,
     arithmeticExpression,
-    operator,
+    term,
+    expPrime,
+    termPrime,
+    factor,
+    highPrecedenceOperators,
+    lowPrecedenceOperators,
     booleanExpression,
     var,
     logicalOp,
@@ -113,6 +118,8 @@ typedef struct tokenList
     int setSize;
     TokenListNode *head;
     TokenListNode *tail;
+    bool computed;
+    // bool is_present[59];
 } TokenList;
 typedef struct ffSingleNode
 {

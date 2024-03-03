@@ -975,7 +975,6 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
                 {
                     addSets(followSet, V_tempFirstSet, false);
                 }
-                V_temp =
             }
         }
     }

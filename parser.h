@@ -14,6 +14,7 @@ TokenList *allocTokenList();
 Rule *allocRule(nonTerminal V, int ruleNo);
 SymbolNode *allocSymbol(int enumIndex, bool isTerm);
 void allocSets(FirstAndFollow *F);
+void allocTreeNode(TreeNode *root);
 void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R);
 void appendSymbolList(SymbolList *L, SymbolNode *node);
 void appendNodeSet(TokenList *L, TokenListNode *node);

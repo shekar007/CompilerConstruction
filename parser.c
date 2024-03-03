@@ -554,6 +554,7 @@ void appendSymbolList(SymbolList *L, SymbolNode *node)
         L->tail->next = node;
     }
     L->tail = node;
+    L->productionLength++;
 }
 
 Rule *allocRule(int ruleNo)
@@ -696,7 +697,7 @@ ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V)
 
 void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
 {
-    Rules *V_productions = G->rules[V];
+    Rules *V_productions = G->rules[(int)V];
     Rule *V_production = V_productions->rulePtr; // pointer to first V production
     TokenList *L = node->firstSet;
     for (int i = 0; i < V_productions->numVariableProductions; i++)

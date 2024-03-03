@@ -13,8 +13,8 @@
 
 typedef struct symNode
 {
-    symNode *next;
-    char *tokentype;
+    struct symNode *next;
+    TokenName tokentype;
     char *lexeme;
 
 } symNode;

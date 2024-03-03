@@ -1,11 +1,4 @@
-#ifndef LEXERDEF_H
-#define LEXERDEF_H
-#include <stdio.h>
-#include <stdlib.h>
-
-typedef enum
-{
-    TK_ASSIGNOP,
+TK_ASSIGNOP,
     TK_COMMENT,
     TK_FIELDID,
     TK_ID,
@@ -62,21 +55,4 @@ typedef enum
     TK_GT,
     TK_GE,
     TK_NE,
-    EPSILON,
-    TK_ERROR
-} TokenName;
-
-typedef union
-{
-    long long num;
-    long double r_num;
-} Value;
-
-typedef struct token
-{
-    TokenName name;
-    char *lexeme;
-    Value *value;
-    bool isint;
-} Token;
-#endif
+    EPSILON

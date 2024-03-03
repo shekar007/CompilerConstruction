@@ -1,0 +1,9 @@
+{
+  "files.associations": {
+    "stdbool.h": "c",
+    "lexerdef.h": "c",
+    "string.h": "c",
+    "symboltable.h": "c",
+    "math.h": "c"
+  }
+}

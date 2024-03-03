@@ -73,6 +73,7 @@ typedef struct symbolNode
 {
     symbolType type;
     struct symbolNode *next;
+    struct symbolNode *prev; // modify prev
     bool isTerm;
 } SymbolNode;
 

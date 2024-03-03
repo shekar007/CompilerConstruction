@@ -10,7 +10,6 @@
 #include "parserDef.h"
 
 #define LINE_SIZE 200 * sizeof(char)
-#define LINE_SIZE 200 * sizeof(char)
 
 Stack *createStack()
 {

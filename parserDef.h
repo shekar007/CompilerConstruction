@@ -7,7 +7,7 @@
 
 #include "lexerDef.h"
 #include "definitions.h"
-
+//@shekar git pe daal dena incase ur laptop goes down
 //@aaradhya create struct for grammar and write computeFirstAndFollowSets function
 //@aadit struct for parse table and write createParseTable function
 // enum,union -> camelcase
@@ -85,8 +85,10 @@ typedef struct symbolList
 
 typedef struct rule
 {
+    nonTerminal non_terminal; // functions to be modified @aarads21
     SymbolList *product;
     struct rule *next;
+    struct rule *prev; // add previous to this
     int ruleNo;
 } Rule;
 typedef struct rules
@@ -99,7 +101,6 @@ typedef struct grammar
     int numOfRules;
     Rules **rules;
 } Grammar;
-
 
 typedef struct tokenListNode
 {
@@ -114,10 +115,12 @@ typedef struct tokenList
 } TokenList;
 typedef struct ffSingleNode
 {
-    nonTerminal name;         // name of non terminal this struct stores data of
+    nonTerminal name;          // name of non terminal this struct stores data of
     TokenList *firstSet;       // list of token names in first set
     TokenList *followSet;      // list of token names in follow set
     struct ffSingleNode *next; // storing address of next node in linked list
+    bool firstComputed;
+    bool followComputed;
 } ffSingleNode;
 
 // firstAndFollow is implemented as a hash table with the key being the name of the non-terminal.
@@ -133,7 +136,32 @@ typedef struct table // parse table
     int numOfNonTerminals;
     int numTerminals;
 
-    Rule **table[NO_OF_NONTERMINALS][NO_OF_TERMINALS];
+    Rule *table[NO_OF_NONTERMINALS][NO_OF_TERMINALS + 1];
+    bool check[NO_OF_NONTERMINALS][NO_OF_TERMINALS + 1];
 
 } Table;
+
+typedef struct TreeNode
+{
+    symbolType *element;
+    childElement *headChild;
+    int isTerminal;
+    int noChild;
+
+} TreeNode;
+typedef struct childElement
+{
+    TreeNode *element;
+    childElement *next;
+} childElement;
+
+typedef struct stackNode
+{
+    TreeNode *stackEle;
+    struct stackNode *next;
+} stackNode;
+typedef struct Stack
+{
+    stackNode *top;
+} Stack;
 #endif

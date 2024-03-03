@@ -11,7 +11,7 @@ FirstAndFollow *computeFirstAndFollowSets(Grammar G);
 Grammar *allocGrammar();
 SymbolList *allocSymbolList();
 TokenList *allocTokenList();
-Rule *allocRule(int ruleNo);
+Rule *allocRule(nonTerminal V, int ruleNo);
 SymbolNode *allocSymbol(int enumIndex, bool isTerm);
 void allocSets(FirstAndFollow *F);
 void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R);

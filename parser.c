@@ -9,6 +9,93 @@
 #include "lexer.h"
 #include "lexerDef.h"
 #define LINE_SIZE 200 * sizeof(char)
+
+Stack *createStack()
+{
+    Stack *stack = (Stack *)malloc(sizeof(Stack));
+    if (stack == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    stack->top = NULL;
+    return stack;
+}
+int isEmpty(Stack *stack)
+{
+    return (stack->top == NULL);
+}
+void push(Stack *stack, TreeNode *element)
+{
+    stackNode *newNode = (stackNode *)malloc(sizeof(stackNode));
+    if (newNode == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    newNode->stackEle = element;
+    newNode->next = stack->top;
+    stack->top = newNode;
+}
+TreeNode *pop(Stack *stack)
+{
+    if (isEmpty(stack))
+    {
+        printf("Stack underflow\n");
+        exit(1);
+    }
+    stackNode *temp = stack->top;
+    TreeNode *data = temp->stackEle;
+    stack->top = temp->next;
+    free(temp);
+    return data;
+}
+TreeNode *peek(Stack *stack)
+{
+    if (isEmpty(stack))
+    {
+        printf("Stack is empty\n");
+        exit(1);
+    }
+    return stack->top->stackEle;
+}
+
+TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T)
+{
+    TreeNode *root = initialiseParseTree();
+    Stack *stack = createStack();
+    push(stack, program);
+    root->element = program;
+    int tokenptr = 0;
+    int stringptr = 0;
+
+    while (!isEmpty(stack))
+    {
+        TreeNode *n = pop(stack);
+        Rule *r = T->table[n->element->non_terminal][tokenArray[tokenptr]->name];
+        SymbolList *ruleList = r->product;
+        SymbolNode *ptr = ruleList->tail;
+        while (ptr != NULL)
+        {
+            TreeNode *ele;
+        }
+
+        // if it is non-terminal
+        // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
+    }
+
+    // stack has been pushed and tree has been initialised
+}
+TreeNode *initialiseParseTree()
+{
+    TreeNode *root = (TreeNode *)malloc(sizeof(TreeNode));
+    root->element;
+    root->noChild = 0;
+    root->isTerminal = 0;
+    root->headChild = NULL;
+    return root;
+}
+
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -422,7 +509,7 @@ nonTerminal stringToNonTerminal(char *str)
 Grammar *generateGrammar(FILE *fp)
 {
     Grammar *G = allocGrammar();
-    char *line = (char *)malloc(200 * sizeof(char));
+    char *line = (char *)malloc(200 * sizeof(char)); // size of buffers might need to be increased
     char *lhs = (char *)malloc(100 * sizeof(char));
     char *rhs = (char *)malloc(100 * sizeof(char));
     char *symbol = (char *)malloc(50 * sizeof(char));
@@ -436,7 +523,7 @@ Grammar *generateGrammar(FILE *fp)
             char *rhsPtr = line + strlen(lhs) + 2;
             while (*rhsPtr == ' ')
                 rhsPtr++;
-            rhsPtr += 4;
+            rhsPtr += 4; // why
             while (*rhsPtr == ' ')
                 rhsPtr++;
             while (sscanf(rhsPtr, " %99[^|\n]", rhs) == 1)
@@ -449,7 +536,7 @@ Grammar *generateGrammar(FILE *fp)
                 rhsPtr++;
                 while (*rhsPtr == ' ')
                     rhsPtr++;
-                Rule *newRule = allocRule(ruleNo);
+                Rule *newRule = allocRule(V, ruleNo);
                 char *symPtr = rhs;
                 while (sscanf(symPtr, " %50[^ ]", symbol) == 1)
                 {
@@ -521,6 +608,10 @@ int main()
         printf("failed to open file\n");
     }
     Grammar *G = generateGrammar(fp);
+    Table *T = allocParseTable();
+    FirstAndFollow *F;
+
+    createParseTable();
     printGrammar(G);
 }
 Grammar *allocGrammar()
@@ -557,12 +648,13 @@ void appendSymbolList(SymbolList *L, SymbolNode *node)
     L->productionLength++;
 }
 
-Rule *allocRule(int ruleNo)
+Rule *allocRule(nonTerminal V, int ruleNo)
 {
     Rule *newRule = (Rule *)malloc(sizeof(Rule));
     newRule->next = NULL;
     newRule->product = allocSymbolList();
     newRule->ruleNo = ruleNo;
+    newRule->non_terminal = V;
     return newRule;
 }
 // structure change kiya
@@ -682,15 +774,11 @@ void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
     }
     resetTailSet(set1);
 }
-ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V)
+
+// O(n) searching? should be O(1). convert enum nonTerminal to int directly and use as index shi aise hi use krle wtf
+ffSingleNode *returnFFSingleNode(FirstAndFollow *F, nonTerminal V)
 {
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
-        if (F->table[i]->name == V)
-        {
-            return F->table[i];
-        }
-    }
+    return F->table[(int)V];
 }
 // hash table ki tarah karna hai kya?
 // lamba padhega but bahut
@@ -715,7 +803,7 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             }
             else
             {
-                ffSingleNode *node2 = findFFSymbolNode(F, temp->type.non_terminal);
+                ffSingleNode *node2 = returnFFSingleNode(F, temp->type.non_terminal);
                 TokenList *set2 = node2->firstSet;
                 computeFirst(G, F, temp->type.non_terminal, node2);
                 addSets(L, set2, false);
@@ -727,11 +815,43 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
         {
             appendNodeSet(L, createTokenNode(EPSILON));
         }
-        temp = temp->next;
     }
     return;
 }
-void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V);
+void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
+{
+    Rules *V_productions = G->rules[(int)V];
+    Rule *cur_rule = V_productions->rulePtr;
+    TokenList *L = node->firstSet;
+    while (cur_rule != NULL)
+    {
+        SymbolList *rhs = cur_rule->product;
+        SymbolNode *cur_sym = rhs->head;
+        while (cur_sym != NULL)
+        {
+            if (cur_sym->isTerm)
+            {
+                appendNodeSet(L, createTokenNode(cur_sym->type.terminal));
+            }
+            else
+            {
+            }
+        }
+    }
+}
+void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
+{
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+
+        Rules **rules = G->rules[i];
+        while (cur_rule != NULL)
+        {
+
+            cur_rule = cur_rule->next;
+        }
+    }
+}
 
 bool contains_eps(TokenList *T)
 {
@@ -747,41 +867,133 @@ bool contains_eps(TokenList *T)
     }
 }
 
-// TokenList *returnFirst(FirstAndFollow *F, Rule *R)
-// {
+TokenList *returnFirstOfVariable(FirstAndFollow *F, nonTerminal V)
+{
+    return returnFFSingleNode(F, V)->firstSet;
+}
+TokenList *returnFirst(FirstAndFollow *F, Rule *R)
+{
+    SymbolNode *temp = R->product->head;
+    TokenList *rhsFirstSet = allocTokenList();
+    ffSingleNode **sets = F->table;
+    while (temp != NULL)
+    {
+        if (temp->isTerm)
+        {
+            appendNodeSet(rhsFirstSet, createTokenNode(temp->type.terminal));
+            break;
+        }
+        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal], true);
+        ffSingleNode *tempNode = returnFFSingleNode(F, temp->type.non_terminal);
+        TokenList *tempList = tempNode->firstSet;
+        if (!isNodeInSet(tempList, createTokenNode(EPSILON)))
+        {
+            break;
+        }
+        temp = temp->next;
+    }
+    return rhsFirstSet;
+}
 
-//     TokenList *firstSet = (TokenList *)malloc(sizeof(TokenList));
-//     firstSet->setSize = 0;
-//     Symbol *curr = R->symbols->symbols;
+Table *allocParseTable()
+{
 
-//     TokenListNode *prev = (TokenListNode *)malloc(sizeof(TokenListNode));
-//     firstSet->head = prev;
+    Table *T = (Table *)malloc(sizeof(Table));
 
-//     while (true)
-//     {
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        for (int j = 0; j < NO_OF_TERMINALS; j++)
+        {
+            T->check[i][j] = false;
+        }
+    }
+    return T;
+}
 
-//         TokenListNode *temp = (TokenListNode *)malloc(sizeof(TokenListNode));
+void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
+{
+    Rules **allRules = G->rules;
+    int noRules = G->numOfRules;
 
-//         if (curr->isTerm)
-//         {
-//             prev->next = temp;
-//             prev->name = curr->type.terminal;
-//             firstSet->setSize++;
-//             break;
-//         }
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
 
-//         else if (!curr->isTerm)
-//         {
-//             ffSingleNode *ff = F->table[curr->type.nonterminal];
-//             prev->next = ff->firstSet->head;
-//             firstSet->setSize += ff->firstSet->setSize;
-//         }
-//     }
-// }
+        Rule *rule = G->rules[i]->rulePtr;
 
-// function required to read grammar from text file
+        for (int j = 0; j < G->rules[i]->numVariableProductions; j++)
+        {
+            TokenList *first = returnFirst(F, rule);
 
-// void createParseTable(FirstAndFollow F, Grammar G, Table *T)
-// {
-// }
-// parseDef mai kya red dikha raha. suggestions han ab done hone band ho gye uski vajah se
+            TokenListNode *head = first->head;
+            for (int z = 0; z < first->setSize; z++)
+            {
+                if (head->name == EPSILON)
+                {
+                    TokenList *follow = F->table[i]->followSet;
+
+                    TokenListNode *followHead = follow->head;
+
+                    for (int k = 0; k < follow->setSize; k++)
+                    {
+                        if (T->check[i][(int)head->name])
+                        {
+                            printf("Eroor in generation of parse table, duplicate entries in %d, %d", i, z);
+                        }
+                        else
+                        {
+                            // what is epsRule ?
+                            // parse table mei a rule A->epsilon may be added even if it is actually not there
+                            // to uske liye sirf follow sets ke under nhi hota tha kya if it is actually there ?
+                            // frm what i read, i guess the actual eps productions(if actually present) are placed under the corresponding terminals present in the follow set of the nonTerminal
+                            // iss step ke liye kara hai maine ye, not sure if maine sahi kara ahi
+                            // If First(α) contains ε (epsilon) as terminal, then find the Follow(A) and for each terminal in Follow(A), make entry A –>  ε in the table.
+                            // Ye A->epsilon hai epsRule. The thing is, ye condition true hone ke liye A->epsilon might or might not exits in the language ha shi, A->BC
+                            // B->eps
+                            // C->eps
+                            Rule *epsRule = allocRule(j, -1);
+                            SymbolNode *epsNode = allocSymbol(EPSILON, true);
+                            appendSymbolList(epsRule->product, epsNode);
+
+                            // inke liye functions bane hai
+                            // oh, kaunsa?
+                            // allocR
+
+                            T->table[i][z] = epsRule;
+                            T->check[i][z] = true;
+                        }
+
+                        followHead = followHead->next;
+                    }
+                }
+                else
+                {
+                    if (T->check[i][(int)head->name])
+                    {
+                        printf("Error in generation of parse table, duplicate entries in %d, %d", i, z);
+                    }
+                    else
+                    {
+                        T->table[i][z] = rule;
+                        T->check[i][z] = true;
+                    }
+                }
+                head = head->next;
+            }
+
+            rule = rule->next;
+        }
+    }
+}
+
+// E -> E'T | T
+//  E ->E'T
+//  E -> T
+// E'-> f
+// T -> t
+// first(E) = f, t
+// first(E')
+// first(T)
+//  alpha = E'T
+//  beta = T
+//  first(alpha) =
+//  parseDef mai kya red dikha raha. suggestions han ab done hone band ho gye uski vajah se

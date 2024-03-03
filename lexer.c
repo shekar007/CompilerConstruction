@@ -12,11 +12,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#ifndef __lexerDef_H_INCLUDED__
+#define __lexerDef_H_INCLUDED__
 #include "lexerDef.h"
-#include "symbolTable.h"
-#include "symbolTableDef.h"
+#endif
 
-#define BUFFER_SIZE 4096
+#ifndef __symbolTable_H_INCLUDED__
+#define __symbolTable_H_INCLUDED__
+#include "symbolTable.h"
+#endif
+#define BUFFER_SIZE 10
 typedef struct twinBuffer
 {
     char *buffer1; // Declare buffer1 as a pointer
@@ -24,8 +29,8 @@ typedef struct twinBuffer
 
 } twinBuffer;
 twinBuffer *buffer;
-bool bufferChoice;
 symTable *symbolTable;
+bool bufferChoice = 0;
 int flagdr = 0;
 int fwdptr = 0;
 int varlength = 0;
@@ -71,7 +76,10 @@ char *currentBuffer(twinBuffer *buffer)
     }
     return buffer->buffer2;
 }
-
+void printBuffer(char *buffer)
+{
+    //printf("printing buffer : %s\n", buffer);
+}
 FILE *getStream(FILE *fp)
 {
     if (flagdr == 1)
@@ -83,16 +91,26 @@ FILE *getStream(FILE *fp)
     }
     if (bufferChoice == true)
     {
-        memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+        memset(buffer->buffer2, '\0', BUFFER_SIZE + 1);
     }
     else
     {
-        memset(buffer->buffer2, '\0', BUFFER_SIZE + 1);
+        memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     }
+    // char ch;
+    // if (fp != NULL)
+    //{
+    //     ch = fgetc(fp);
+    // }
+    // if (ch == -1)
+    //{
+    //     printf("reached eof\n");
+    // }
+
     if (feof(fp))
     {
-        fclose(fp);
-        bufferChoice = !bufferChoice;
+        printf("reached eof\n");
+        // bufferChoice = !bufferChoice;
         return NULL;
     }
     else
@@ -100,15 +118,22 @@ FILE *getStream(FILE *fp)
         if (bufferChoice == true)
         {
             bufferChoice = !bufferChoice;
-            if (fread(buffer->buffer1, sizeof(char), BUFFER_SIZE, fp) > 0)
+            int size;
+            if ((size = fread(buffer->buffer2, sizeof(char), BUFFER_SIZE, fp)) > 0)
             {
-                buffer->buffer1[BUFFER_SIZE] = '\0';
+                //printf("buffer 2 : %s\n", buffer->buffer1);
+
+                if (size < BUFFER_SIZE)
+                {
+                    buffer->buffer1[size] = -1;
+                }
+
+                buffer->buffer2[BUFFER_SIZE] = '\0';
 
                 return fp;
             }
             else
             {
-                fclose(fp);
                 return NULL;
             }
         }
@@ -116,15 +141,21 @@ FILE *getStream(FILE *fp)
         {
             bufferChoice = !bufferChoice;
 
-            if (fread(buffer->buffer2, sizeof(char), BUFFER_SIZE, fp) > 0)
+            int size;
+            if ((size = fread(buffer->buffer1, sizeof(char), BUFFER_SIZE, fp)) > 0)
             {
-                buffer->buffer2[BUFFER_SIZE] = '\0';
+                // printf("buffer 1 : %s\n", buffer->buffer1);
+
+                if (size < BUFFER_SIZE)
+                {
+                    buffer->buffer1[size] = -1;
+                }
+                buffer->buffer1[BUFFER_SIZE] = '\0';
 
                 return fp;
             }
             else
             {
-                fclose(fp);
                 return NULL;
             }
         }
@@ -133,7 +164,7 @@ FILE *getStream(FILE *fp)
 
 FILE *refillBuffer(int *fwdptr, FILE *fileptr)
 {
-
+    //printf("printing current buffer : %c\n", currentBuffer(buffer)[*fwdptr]);
     if (currentBuffer(buffer)[*fwdptr] == '\0')
     {
         *fwdptr = 0;
@@ -146,24 +177,17 @@ FILE *refillBuffer(int *fwdptr, FILE *fileptr)
     }
 }
 
-TokenName *getNextToken(FILE *fileptr)
+Token *getNextToken(FILE *fileptr)
 {
+
+
+    Token *token = (Token *)malloc(sizeof(Token));
+    fileptr = refillBuffer(&fwdptr, fileptr);
     if (fileptr == NULL)
     {
         return NULL;
     }
-    else
-    {
-        if (feof(fileptr))
-        {
-            fclose(fileptr);
-            return NULL;
-        }
-    }
-
-    Token *token = (Token *)malloc(sizeof(Token));
-    refillBuffer(&fwdptr, currentBuffer(buffer));
-
+    printBuffer(currentBuffer(buffer));
     int state = 0;
     char *lexeme = (char *)malloc(sizeof(char) * 50);
     memset(lexeme, '\0', 50);
@@ -181,6 +205,7 @@ TokenName *getNextToken(FILE *fileptr)
             // ab mai kya karu
             // case 1 se likhna start kar
             fileptr = refillBuffer(&fwdptr, fileptr);
+            printBuffer(currentBuffer(buffer));
 
             if (fileptr == NULL)
             {
@@ -199,7 +224,7 @@ TokenName *getNextToken(FILE *fileptr)
             {
                 state = 0;
                 fwdptr++;
-                // line_number++;
+                lineno++;
             }
 
             else if (currentBuffer(buffer)[fwdptr] == ')')
@@ -292,7 +317,7 @@ TokenName *getNextToken(FILE *fileptr)
                 fwdptr++;
             }
 
-            else if (currentBuffer(buffer)[fwdptr] == '<')
+            else if (currentBuffer(buffer)[fwdptr] == '>')
             {
                 state = 18;
                 fwdptr++;
@@ -357,9 +382,15 @@ TokenName *getNextToken(FILE *fileptr)
                 state = 57;
                 fwdptr++;
             }
+            else if(currentBuffer(buffer)[fwdptr] == -1 && (fileptr==NULL || feof(fileptr)))
+            {
+                return NULL;
+            }
 
             else
             {
+                prev = currentBuffer(buffer)[fwdptr];
+                errtype = 3;
                 state = 60;
                 fwdptr++;
             }
@@ -422,10 +453,10 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 7:
         {
-            lexeme[lex_ptr] = ')';
+            lexeme[lex_ptr] = '.';
             lex_ptr++;
             token->lexeme = lexeme;
-            token->name = TK_CL;
+            token->name = TK_DOT;
             return token;
             break;
         }
@@ -434,7 +465,7 @@ TokenName *getNextToken(FILE *fileptr)
             lexeme[lex_ptr] = '[';
             lex_ptr++;
             token->lexeme = lexeme;
-            token->name = TK_CL;
+            token->name = TK_SQL;
             return token;
             break;
         }
@@ -475,7 +506,7 @@ TokenName *getNextToken(FILE *fileptr)
             lexeme[lex_ptr] = '-';
             lex_ptr++;
             token->lexeme = lexeme;
-            token->name = TK_NE;
+            token->name = TK_MINUS;
             return token;
         }
         case 13:
@@ -642,30 +673,32 @@ TokenName *getNextToken(FILE *fileptr)
         case 27:
         {
 
-            lexeme[lex_ptr] = prev;
-            lex_ptr++;
+            
             token->name = TK_COMMENT;
 
             do
             {
-                fwdptr++;
+                fileptr = refillBuffer(&fwdptr, fileptr);
                 char ch = currentBuffer(buffer)[fwdptr];
-                if (ch == -1)
+                printBuffer(currentBuffer(buffer));
+                if(ch == '\n')
                 {
-                    token->lexeme = lexeme;
-                    return token;
-                }
-                else if (ch == '\n')
-                {
-                    token->lexeme = lexeme;
                     lineno++;
-                    return token;
+                    break;
                 }
-                else
+                else if(ch ==-1)
                 {
-                    lexeme[lex_ptr] = ch;
+                    break;
                 }
-            } while (true);
+                else if(ch == '\0'){
+                    break;
+                }
+                fwdptr++;
+                
+            }
+             while (true);
+            return token;
+            break;
         }
 
         case 28:
@@ -695,6 +728,7 @@ TokenName *getNextToken(FILE *fileptr)
             {
                 state = 29;
             }
+            break;
         }
 
         case 29:
@@ -723,8 +757,27 @@ TokenName *getNextToken(FILE *fileptr)
             }
             else
             {
-                // implement (double) retraction
+                int l = strlen(lexeme);
+                char *double_retracted_string = (char *)malloc(l - 1);
+                strncpy(double_retracted_string, lexeme, l - 2);
+                double_retracted_string[l - 2] = '\0'; // Null terminate the string
+                token->lexeme = double_retracted_string;
+                token->name = TK_LT;
+                for (int i = 0; i < 2; i++)
+                {
+                    if (fwdptr > 0)
+                    {
+                        fwdptr--;
+                    }
+                    else
+                    {
+                        fwdptr = BUFFER_SIZE - 1;
+                    }
+                }
+                flagdr = 1;
+                return token;
             }
+            break;
         }
 
         case 31:
@@ -829,6 +882,7 @@ TokenName *getNextToken(FILE *fileptr)
                 addSymbol(symbolTable, token, lineno);
                 return token;
             }
+            break;
         }
         case 38:
         {
@@ -858,6 +912,8 @@ TokenName *getNextToken(FILE *fileptr)
 
             token->lexeme = lexeme;
             token->name = TK_NUM;
+            token->value = (Value *)malloc(sizeof(Value));
+
             token->value->num = atoi(lexeme);
             token->isint = 1;
             return token;
@@ -880,6 +936,7 @@ TokenName *getNextToken(FILE *fileptr)
                 prev = c;
                 fwdptr++;
             }
+            break;
         }
         case 41:
         {
@@ -888,10 +945,10 @@ TokenName *getNextToken(FILE *fileptr)
             char *double_retracted_string = (char *)malloc(l - 1);
             strncpy(double_retracted_string, lexeme, l - 2);
             double_retracted_string[l - 2] = '\0'; // Null terminate the string
+            token->value = (Value *)malloc(sizeof(Value));
             token->value->num = atoi(lexeme);
             token->isint = 1;
             token->name = TK_NUM;
-            free(double_retracted_string);
             for (int i = 0; i < 2; i++)
             {
                 if (fwdptr > 0)
@@ -948,6 +1005,7 @@ TokenName *getNextToken(FILE *fileptr)
             token->lexeme = lexeme;
             token->name = TK_RNUM;
             token->isint = 0;
+            token->value = (Value *)malloc(sizeof(Value));
             token->value->r_num = strtof(lexeme, NULL);
             token->isint = 0;
             return token;
@@ -975,6 +1033,7 @@ TokenName *getNextToken(FILE *fileptr)
             {
                 state = 60;
             }
+            break;
         }
         case 46:
         {
@@ -1018,6 +1077,8 @@ TokenName *getNextToken(FILE *fileptr)
             token->lexeme = lexeme;
             token->name = TK_RNUM;
             token->isint = 0;
+            token->value = (Value *)malloc(sizeof(Value));
+
             token->value->r_num = strtof(lexeme, NULL);
             return token;
         }
@@ -1088,11 +1149,12 @@ TokenName *getNextToken(FILE *fileptr)
         }
         case 52:
         {
-            lexeme[lex_ptr] = prev;
-            lex_ptr++;
+            
+            //lexeme[lex_ptr] = prev;
+            //lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_FUNID;
-            if (!strlen(lexeme) <= 30)
+            if (!(strlen(lexeme) <= 30))
             {
                 state = 60;
                 errtype = 1;
@@ -1112,6 +1174,7 @@ TokenName *getNextToken(FILE *fileptr)
                     return token;
                 }
             }
+            break;
         }
         case 53:
         {
@@ -1224,7 +1287,7 @@ TokenName *getNextToken(FILE *fileptr)
             else
             {
                 state = 58;
-                fwdptr++;
+                // fwdptr++;
             }
             break;
         }
@@ -1243,6 +1306,7 @@ TokenName *getNextToken(FILE *fileptr)
                 addSymbol(symbolTable, token, lineno);
                 return token;
             }
+            break;
         }
         case 59:
         {
@@ -1257,28 +1321,72 @@ TokenName *getNextToken(FILE *fileptr)
             printf("Error at lineno : %d\n", lineno);
             if (errtype == 0)
             {
+                Token *t;
+                t = (Token *)malloc(sizeof(Token));
+                t->name = TK_ERROR;
                 printf("\nThis is not a valid token : %s \n", lexeme);
+
+                return t;
+            }
+            else if(errtype == 3)
+            {
+                
+                Token *t;
+                t = (Token *)malloc(sizeof(Token));
+                t->name = TK_ERROR;
+                printf("\nThis is not a valid token : %c \n",prev);
+             return t;
             }
             else
             {
+                Token *t;
+                t = (Token *)malloc(sizeof(Token));
+                t->name = TK_ERROR;
                 printf("Variable length should be between 2 and 20.\n Length of variable '%s' is %d \n", lexeme, varlength);
+
+                return t;
             }
-            return NULL;
+            // note after error tokensiation
         }
         }
     }
 }
+void printToken(Token *t)
+{
+    const char* enumValues[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"
+};
 
+    printf("------------------- \n");
+    if (t->name == TK_NUM)
+    {
+        printf("Value : %lld\n", t->value->num);
+    }
+    else if (t->name == TK_RNUM)
+    {
+        printf("Value : %Lf\n", t->value->r_num);
+    }
+
+    printf("Token Type : %s\n", enumValues[t->name]);
+    printf("Lexeme : %s\n", t->lexeme);
+    printf("------------------- \n");
+}
 int main()
 {
+
+    
     // Allocate memory for buffers
+    symbolTable = createEmptyTable(50);
+    addKeywords(symbolTable);
+
+
+    buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
     buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
     if (buffer->buffer1 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
         return 1; // Exit with failure status
     }
-    buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
+    buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
     if (buffer->buffer2 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
@@ -1286,6 +1394,27 @@ int main()
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+    FILE *fileptr = fopen("testCaseFile.txt", "r");
+    if (fileptr == NULL)
+    {
+        printf("Error in operning \n");
+        return 1;
+    }
+    while (true)
+    {
+        // printf("entered while\n");
+        Token *tokenReturned = getNextToken(fileptr);
+        if (tokenReturned == NULL)
+        {
+            break;
+        }
+        else
+        {
+            printToken(tokenReturned);
+        }
+    }
+
+    fclose(fileptr);
 
     return 0;
 }

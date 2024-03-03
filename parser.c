@@ -805,7 +805,9 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             {
                 ffSingleNode *node2 = returnFFSingleNode(F, temp->type.non_terminal);
                 TokenList *set2 = node2->firstSet;
-                computeFirst(G, F, temp->type.non_terminal, node2);
+                if(!node2->firstComputed){
+                    computeFirst(G, F, temp->type.non_terminal, node2);
+                }
                 addSets(L, set2, false);
                 if (!isNodeInSet(set2, createTokenNode(EPSILON)))
                     break;
@@ -818,37 +820,51 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
     }
     return;
 }
-void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
-{
-    Rules *V_productions = G->rules[(int)V];
-    Rule *cur_rule = V_productions->rulePtr;
-    TokenList *L = node->firstSet;
-    while (cur_rule != NULL)
-    {
-        SymbolList *rhs = cur_rule->product;
-        SymbolNode *cur_sym = rhs->head;
-        while (cur_sym != NULL)
-        {
-            if (cur_sym->isTerm)
-            {
-                appendNodeSet(L, createTokenNode(cur_sym->type.terminal));
-            }
-            else
-            {
-            }
+SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V){
+    SymbolNode *temp = S->head;
+    while(temp!=NULL){
+        if(temp->type.non_terminal==V){
+            return temp;
         }
+        temp = temp->next;
     }
+    return NULL;
 }
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
 {
+    TokenList *followSet = F->table[(int)V]->followSet;
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
 
-        Rules **rules = G->rules[i];
+        Rules *V_productions = G->rules[i];
+        Rule *cur_rule = V_productions->rulePtr;
         while (cur_rule != NULL)
         {
-
+            SymbolList *rhs = cur_rule->product;
             cur_rule = cur_rule->next;
+            SymbolNode *V_rhs = returnSymbolFromList(rhs,V);
+            if(V_rhs==NULL){
+                continue;
+            }
+            SymbolNode *V_temp = V_rhs->next;
+            ffSingleNode *V_tempSingleNode = F->table[(int)V_temp->type.non_terminal]; 
+            TokenList *V_tempFollowSet = V_tempSingleNode->followSet;
+            TokenList *V_tempFirstSet = V_tempSingleNode->firstSet;
+            if(V_temp==NULL){
+                if(!V_tempSingleNode->followComputed){
+                    computeFollow(G,F,V_temp->type.non_terminal);
+                }
+                addSets(followSet, V_tempFollowSet ,false);
+            }
+            while(V_temp!=NULL){
+                if(V_temp->isTerm){
+                    if(isNodeInSet(followSet,createTokenNode(V_temp->type.terminal)));
+                    break;
+                }else{
+                    addSets(followSet, V_tempFirstSet, false);
+                }
+                V_temp = 
+            }
         }
     }
 }

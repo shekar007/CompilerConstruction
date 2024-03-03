@@ -65,7 +65,13 @@ typedef enum
     idList,
     more_ids,
     definetypestmt,
-    A
+    A,
+    actualOrRedefined,
+    oneExpansion,
+    moreExpansions,
+    option_single_constructed,
+    elsePart,
+    fieldType
 } nonTerminal;
 
 typedef union
@@ -160,7 +166,7 @@ struct childElement
 
 struct TreeNode
 {
-    symbolType *element;
+    symbolType element;
     childElement *headChild;
     int isTerminal;
     int noChild;

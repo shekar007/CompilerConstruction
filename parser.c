@@ -50,7 +50,7 @@ TreeNode *pop(Stack *stack)
     free(temp);
     return data;
 }
-TreeNode *peek(Stack *stack)
+TreeNode *top(Stack *stack)
 {
     if (isEmpty(stack))
     {
@@ -60,9 +60,12 @@ TreeNode *peek(Stack *stack)
     return stack->top->stackEle;
 }
 
-TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T)
+TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int tokenArrayLength)
 {
-    TreeNode *root = initialiseParseTree();
+    // pass length of tokenarray and variable = tokenArrayLength
+    TreeNode *root = (TreeNode *)malloc(sizeof(TreeNode));
+    root->isTerminal = 0;
+    root->element = NULL;
     Stack *stack = createStack();
     push(stack, program);
     root->element = program;
@@ -71,25 +74,81 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T)
 
     while (!isEmpty(stack))
     {
+        if (tokenptr >= tokenArrayLength)
+        {
+            return NULL;
+        }
+        // first step me kya hoga
         TreeNode *n = pop(stack);
+
+        childElement *headptr = n->headChild;
+        /*
+        change in parse tree when popping
+        */
         Rule *r = T->table[n->element->non_terminal][tokenArray[tokenptr]->name];
         SymbolList *ruleList = r->product;
         SymbolNode *ptr = ruleList->tail;
         while (ptr != NULL)
         {
             TreeNode *ele;
+            allocTreeNode(ele);
+            // memory for ele
+            if (ptr->isTerm)
+            {
+                ele->isTerminal = 1;
+            }
+            else
+            {
+                ele->isTerminal = 0;
+            }
+            ele->noChild = 0;
+            ele->headChild = NULL;
+            ele->element = ptr;
+            push(stack, ele);
+            n->noChild++;
+
+            if (headptr == NULL)
+            {
+                headptr = ele;
+                headptr = headptr->next;
+            }
+            else
+            {
+                headptr->next = ele;
+                headptr = headptr->next;
+            }
+            ptr = ptr->prev;
+            if (root->element == NULL)
+            {
+                root->headChild = n;
+                root->noChild = 1;
+            }
+        }
+
+        while (top(stack) == tokenArray[tokenptr] || top(stack) == EPSILON)
+        {
+            pop(stack);
+            tokenptr++;
         }
 
         // if it is non-terminal
         // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
     }
-
+    if (tokenptr == tokenArrayLength)
+    {
+        return root->headChild;
+        // successfully parsed
+    }
+    else
+    {
+        return NULL;
+    }
     // stack has been pushed and tree has been initialised
 }
-TreeNode *initialiseParseTree()
+void allocTreeNode(TreeNode *root)
 {
     TreeNode *root = (TreeNode *)malloc(sizeof(TreeNode));
-    root->element;
+    root->element = NULL;
     root->noChild = 0;
     root->isTerminal = 0;
     root->headChild = NULL;
@@ -611,7 +670,6 @@ int main()
     Table *T = allocParseTable();
     FirstAndFollow *F;
 
-    createParseTable();
     printGrammar(G);
 }
 Grammar *allocGrammar()

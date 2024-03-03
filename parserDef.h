@@ -50,7 +50,12 @@ typedef enum
     conditionalStmt,
     ioStmt,
     arithmeticExpression,
-    operator,
+    term,
+    expPrime,
+    termPrime,
+    factor,
+    highPrecedenceOperators,
+    lowPrecedenceOperators,
     booleanExpression,
     var,
     logicalOp,
@@ -73,7 +78,6 @@ typedef struct symbolNode
 {
     symbolType type;
     struct symbolNode *next;
-    struct symbolNode *prev; // modify prev
     bool isTerm;
 } SymbolNode;
 
@@ -89,7 +93,6 @@ typedef struct rule
     nonTerminal non_terminal; // functions to be modified @aarads21
     SymbolList *product;
     struct rule *next;
-    struct rule *prev; // add previous to this
     int ruleNo;
 } Rule;
 typedef struct rules
@@ -113,6 +116,8 @@ typedef struct tokenList
     int setSize;
     TokenListNode *head;
     TokenListNode *tail;
+    bool computed;
+    //bool is_present[59];
 } TokenList;
 typedef struct ffSingleNode
 {
@@ -120,8 +125,6 @@ typedef struct ffSingleNode
     TokenList *firstSet;       // list of token names in first set
     TokenList *followSet;      // list of token names in follow set
     struct ffSingleNode *next; // storing address of next node in linked list
-    bool firstComputed;
-    bool followComputed;
 } ffSingleNode;
 
 // firstAndFollow is implemented as a hash table with the key being the name of the non-terminal.
@@ -142,27 +145,4 @@ typedef struct table // parse table
 
 } Table;
 
-typedef struct TreeNode
-{
-    symbolType *element;
-    childElement *headChild;
-    int isTerminal;
-    int noChild;
-
-} TreeNode;
-typedef struct childElement
-{
-    TreeNode *element;
-    childElement *next;
-} childElement;
-
-typedef struct stackNode
-{
-    TreeNode *stackEle;
-    struct stackNode *next;
-} stackNode;
-typedef struct Stack
-{
-    stackNode *top;
-} Stack;
 #endif

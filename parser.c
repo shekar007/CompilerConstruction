@@ -11,7 +11,7 @@
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
-    G->noOfRules = 0;
+    G->numOfRules = 0;
     G->rules = (Rules **)malloc(sizeof(Rules *) * NO_OF_NONTERMINALS);
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {

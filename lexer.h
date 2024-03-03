@@ -5,4 +5,4 @@
 #include "lexerDef.h"
 
 FILE *getStream(FILE *fp);
-TokenName *getNextToken(FILE *fileptr);
+Token *getNextToken(FILE *fileptr);

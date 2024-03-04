@@ -6,7 +6,8 @@
 
 #include "parser.h"
 #include "parserDef.h"
-
+#include "lexer.h"
+#include "symbolTable.h"
 #define LINE_SIZE 200 * sizeof(char)
 
 Stack *createStack()
@@ -59,41 +60,65 @@ TreeNode *top(Stack *stack)
     return stack->top->stackEle;
 }
 
-TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int tokenArrayLength)
+TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *currtoken)
 {
     // pass length of tokenarray and variable = tokenArrayLength
     TreeNode *root;
-    allocTreeNode(root);
+    allocTreeNode(&root);
+    // note : give non-terminal to root;
     root->isTerminal = 0;
-
     root->element.non_terminal = -1;
     Stack *stack = createStack();
-    push(stack, program);
-    root->element.non_terminal = program;
-
+    TreeNode *prog = (TreeNode *)malloc(sizeof(TreeNode));
+    prog->isTerminal = 0;
+    prog->element.non_terminal = program;
+    prog->noChild = 0;
+    prog->headChild = NULL;
+    push(stack, prog);
     int tokenptr = 0;
     int stringptr = 0;
 
     while (!isEmpty(stack))
     {
-        if (tokenptr >= tokenArrayLength)
+        // if currenttoken  == NULL
+        if (currtoken == NULL)
         {
             return NULL;
         }
+        else if (currtoken->name == TK_COMMENT)
+        {
+            while (true)
+            {
+                currtoken = getNextToken(fileptr);
+                if (currtoken == NULL)
+                {
+                    // PROBLEM HO SAKTI IF LAST LINE IS COMMENT
+                    return NULL;
+                }
+                if (currtoken->name != TK_COMMENT)
+                {
+                    break;
+                }
+            }
+        }
         // first step me kya hoga
-        TreeNode *n = pop(stack);
-
-        childElement *headptr = n->headChild;
+        TreeNode *x = pop(stack);
+        TreeNode **n = &(x);
         /*
         change in parse tree when popping
         */
-        Rule *r = T->table[n->element.non_terminal][tokenArray[tokenptr]->name];
+        Rule *r = T->table[x->element.non_terminal][currtoken->name];
+        if (r == NULL)
+        {
+            // return error in parsing
+        }
         SymbolList *ruleList = r->product;
         SymbolNode *ptr = ruleList->tail;
+        LLNode *headptr;
         while (ptr != NULL)
         {
             TreeNode *ele;
-            allocTreeNode(ele);
+            allocTreeNode(&ele);
             // memory for ele
             if (ptr->isTerm)
             {
@@ -103,40 +128,54 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
             {
                 ele->isTerminal = 0;
             }
+
             ele->noChild = 0;
             ele->headChild = NULL;
-            ele->element = ptr->type;
-            push(stack, ele);
-            n->noChild++;
-
-            if (headptr == NULL)
+            if (ptr->isTerm)
             {
-                headptr = ele->headChild;
-                headptr = headptr->next;
+                ele->element.terminal = ptr->type.terminal;
             }
             else
             {
-                headptr->next = ele->headChild;
+                ele->element.non_terminal = ptr->type.non_terminal;
+            }
+            (*n)->noChild++;
+            push(stack, ele);
+
+            if ((*n)->headChild == NULL)
+            {
+                (*n)->headChild = (LLNode *)malloc(sizeof(LLNode));
+                (*n)->isTerminal = 0;
+                (*n)->noChild++;
+                (*n)->headChild->element = ele;
+                headptr = (*n)->headChild;
+            }
+            else
+            {
+                headptr = headptr->next;
+                headptr->next = (LLNode *)malloc(sizeof(LLNode));
+                headptr->next->element = ele;
                 headptr = headptr->next;
             }
             ptr = ptr->prev;
             if (root->element.non_terminal == -1)
             {
-                root->headChild = n->headChild;
+                root->headChild->element = (*n);
                 root->noChild = 1;
             }
         }
 
-        while (top(stack)->element.terminal == tokenArray[tokenptr]->name || top(stack)->element.terminal == EPSILON)
+        while (top(stack)->element.terminal == currtoken->name || top(stack)->element.terminal == EPSILON)
         {
             pop(stack);
-            tokenptr++;
+            currtoken = getNextToken(fileptr);
+            printToken(currtoken);
         }
 
         // if it is non-terminal
         // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
     }
-    if (tokenptr == tokenArrayLength)
+    if (currtoken != NULL) // currtoken == null)
     {
         return root->headChild->element;
         // successfully parsed
@@ -147,13 +186,13 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
     }
     // stack has been pushed and tree has been initialised
 }
-void allocTreeNode(TreeNode *root)
+void allocTreeNode(TreeNode **root)
 {
-    root = (TreeNode *)malloc(sizeof(TreeNode));
-    root->element.non_terminal = -1;
-    root->noChild = 0;
-    root->isTerminal = 0;
-    root->headChild = NULL;
+    (*root) = (TreeNode *)malloc(sizeof(TreeNode));
+    (*root)->element.non_terminal = 0;
+    (*root)->noChild = 0;
+    (*root)->isTerminal = 1;
+    (*root)->headChild = (LLNode *)malloc(sizeof(LLNode));
 }
 TokenName stringToTokenName(char *str)
 {
@@ -620,6 +659,7 @@ SymbolList *allocSymbolList()
     list->productionLength = 0;
     list->head = NULL;
     list->tail = NULL;
+    return list;
 }
 void appendSymbolList(SymbolList *L, SymbolNode *node)
 {
@@ -1138,5 +1178,43 @@ int main()
     }
     Table *T = allocParseTable();
     createParseTable(F, G, T);
-    printParseTable(T);
+
+    //---------------------
+    initializations();
+    FILE *fileptr = fopen("testCaseFile.txt", "r");
+    if (fileptr == NULL)
+    {
+        printf("Error in operning \n");
+        return 1;
+    }
+    Token *currtoken;
+    while (true)
+    {
+        currtoken = getNextToken(fileptr);
+        if (currtoken->name == TK_COMMENT)
+        {
+            continue;
+        }
+        break;
+    }
+    createParseTree(fileptr, G, T, currtoken);
+    // while (true)
+    // {
+    //     // printf("entered while\n");
+    //     Token *tokenReturned = getNextToken(fileptr);
+    //     if (tokenReturned == NULL)
+    //     {
+    //         break;
+    //     }
+    //     else
+    //     {
+    //         counter++;
+    //         printToken(tokenReturned);
+    //     }
+    // }
+
+    fclose(fileptr);
+
+    return 0;
+    // Allocate memory for buffers
 }

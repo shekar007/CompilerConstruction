@@ -124,7 +124,7 @@ typedef struct tokenList
     int setSize;
     TokenListNode *head;
     TokenListNode *tail;
-    bool containsEps; //added containsEps, no need to add EPSILON token
+    bool containsEps; // added containsEps, no need to add EPSILON token
     bool computed;
     // bool is_present[59];
 } TokenList;
@@ -159,21 +159,19 @@ typedef struct table // parse table
 typedef struct TreeNode TreeNode;
 typedef struct childElement childElement;
 
-struct childElement
+typedef struct LLNode
 {
     TreeNode *element;
-    childElement *next;
-};
+    struct LLNode *next;
+} LLNode;
 
 struct TreeNode
 {
     symbolType element;
-    childElement *headChild;
+    LLNode *headChild;
     int isTerminal;
     int noChild;
-
 };
-
 
 typedef struct stackNode
 {

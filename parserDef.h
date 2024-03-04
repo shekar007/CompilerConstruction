@@ -124,6 +124,7 @@ typedef struct tokenList
     int setSize;
     TokenListNode *head;
     TokenListNode *tail;
+    bool containsEps; //added containsEps, no need to add EPSILON token
     bool computed;
     // bool is_present[59];
 } TokenList;

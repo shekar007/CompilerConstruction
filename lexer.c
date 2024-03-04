@@ -32,6 +32,7 @@ twinBuffer *buffer;
 symTable *symbolTable;
 bool bufferChoice = 0;
 int flagdr = 0;
+int getstreamnull = 0;
 int fwdptr = 0;
 int varlength = 0;
 int lineno = 0;
@@ -78,7 +79,7 @@ char *currentBuffer(twinBuffer *buffer)
 }
 void printBuffer(char *buffer)
 {
-    //printf("printing buffer : %s\n", buffer);
+    // printf("printing buffer : %s\n", buffer);
 }
 FILE *getStream(FILE *fp)
 {
@@ -110,6 +111,7 @@ FILE *getStream(FILE *fp)
     if (feof(fp))
     {
         printf("reached eof\n");
+        getstreamnull = 1;
         // bufferChoice = !bufferChoice;
         return NULL;
     }
@@ -121,7 +123,7 @@ FILE *getStream(FILE *fp)
             int size;
             if ((size = fread(buffer->buffer2, sizeof(char), BUFFER_SIZE, fp)) > 0)
             {
-                //printf("buffer 2 : %s\n", buffer->buffer1);
+                // printf("buffer 2 : %s\n", buffer->buffer1);
 
                 if (size < BUFFER_SIZE)
                 {
@@ -164,7 +166,11 @@ FILE *getStream(FILE *fp)
 
 FILE *refillBuffer(int *fwdptr, FILE *fileptr)
 {
-    //printf("printing current buffer : %c\n", currentBuffer(buffer)[*fwdptr]);
+    if (getstreamnull == 1)
+    {
+        return NULL;
+    }
+    // printf("printing current buffer : %c\n", currentBuffer(buffer)[*fwdptr]);
     if (currentBuffer(buffer)[*fwdptr] == '\0')
     {
         *fwdptr = 0;
@@ -176,12 +182,26 @@ FILE *refillBuffer(int *fwdptr, FILE *fileptr)
         return fileptr;
     }
 }
-
+void printBuffer1()
+{
+    printf("printing buffer1-------------\n");
+    printf("%s\n", buffer->buffer1);
+    printf("-------------\n\n");
+}
+void printBuffer2()
+{
+    printf("printing buffer2-------------\n");
+    printf("%s\n", buffer->buffer2);
+    printf("-------------\n \n");
+}
 Token *getNextToken(FILE *fileptr)
 {
 
-
     Token *token = (Token *)malloc(sizeof(Token));
+    if (getstreamnull == 1)
+    {
+        return NULL;
+    }
     fileptr = refillBuffer(&fwdptr, fileptr);
     if (fileptr == NULL)
     {
@@ -206,14 +226,13 @@ Token *getNextToken(FILE *fileptr)
             // case 1 se likhna start kar
             fileptr = refillBuffer(&fwdptr, fileptr);
             printBuffer(currentBuffer(buffer));
-
+            char ch = currentBuffer(buffer)[fwdptr];
             if (fileptr == NULL)
             {
                 // state 60
                 // print something and null;
                 state = 60;
             }
-
             else if (currentBuffer(buffer)[fwdptr] == ' ' || currentBuffer(buffer)[fwdptr] == '\t')
             {
                 state = 0;
@@ -382,7 +401,7 @@ Token *getNextToken(FILE *fileptr)
                 state = 57;
                 fwdptr++;
             }
-            else if(currentBuffer(buffer)[fwdptr] == -1 && (fileptr==NULL || feof(fileptr)))
+            else if (currentBuffer(buffer)[fwdptr] == -1 && (fileptr == NULL || feof(fileptr)))
             {
                 return NULL;
             }
@@ -673,7 +692,6 @@ Token *getNextToken(FILE *fileptr)
         case 27:
         {
 
-            
             token->name = TK_COMMENT;
 
             do
@@ -681,22 +699,22 @@ Token *getNextToken(FILE *fileptr)
                 fileptr = refillBuffer(&fwdptr, fileptr);
                 char ch = currentBuffer(buffer)[fwdptr];
                 printBuffer(currentBuffer(buffer));
-                if(ch == '\n')
+                if (ch == '\n')
                 {
                     lineno++;
                     break;
                 }
-                else if(ch ==-1)
+                else if (ch == -1)
                 {
                     break;
                 }
-                else if(ch == '\0'){
+                else if (ch == '\0')
+                {
                     break;
                 }
                 fwdptr++;
-                
-            }
-             while (true);
+
+            } while (true);
             return token;
             break;
         }
@@ -1149,9 +1167,9 @@ Token *getNextToken(FILE *fileptr)
         }
         case 52:
         {
-            
-            //lexeme[lex_ptr] = prev;
-            //lex_ptr++;
+
+            // lexeme[lex_ptr] = prev;
+            // lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_FUNID;
             if (!(strlen(lexeme) <= 30))
@@ -1274,12 +1292,13 @@ Token *getNextToken(FILE *fileptr)
         }
         case 57:
         {
+
+            fileptr = refillBuffer(&fwdptr, fileptr);
             lexeme[lex_ptr] = prev;
             lex_ptr++;
-            fileptr = refillBuffer(&fwdptr, fileptr);
             char c = currentBuffer(buffer)[fwdptr];
             prev = c;
-            if (isalphabet(c))
+            if (isalphabet(c) && getstreamnull != 1)
             {
                 state = 57;
                 fwdptr++;
@@ -1328,14 +1347,14 @@ Token *getNextToken(FILE *fileptr)
 
                 return t;
             }
-            else if(errtype == 3)
+            else if (errtype == 3)
             {
-                
+
                 Token *t;
                 t = (Token *)malloc(sizeof(Token));
                 t->name = TK_ERROR;
-                printf("\nThis is not a valid token : %c \n",prev);
-             return t;
+                printf("\nThis is not a valid token : %c \n", prev);
+                return t;
             }
             else
             {
@@ -1353,8 +1372,7 @@ Token *getNextToken(FILE *fileptr)
 }
 void printToken(Token *t)
 {
-    const char* enumValues[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"
-};
+    const char *enumValues[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
 
     printf("------------------- \n");
     if (t->name == TK_NUM)
@@ -1373,11 +1391,9 @@ void printToken(Token *t)
 int main()
 {
 
-    
     // Allocate memory for buffers
     symbolTable = createEmptyTable(50);
     addKeywords(symbolTable);
-
 
     buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
     buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true

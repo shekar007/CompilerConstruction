@@ -816,7 +816,8 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V)
                     computeFirst(G, F, temp->type.non_terminal);
                 }
                 addSets(L, set2, false);
-                if (!set2->containsEps){
+                if (!set2->containsEps)
+                {
                     break;
                 }
                 else if (j == S->productionLength - 1)
@@ -826,7 +827,7 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V)
             }
             temp = temp->next;
         }
-        
+
         V_production = V_production->next;
     }
     node->firstComputed = true;
@@ -837,7 +838,7 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
     SymbolNode *temp = S->head;
     while (temp != NULL)
     {
-        if (temp->isTerm==false && temp->type.non_terminal == V)
+        if (temp->isTerm == false && temp->type.non_terminal == V)
         {
             return temp;
         }
@@ -851,9 +852,10 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
     TokenList *followSet = F->table[(int)V]->followSet;
     if (V_singleNode->followComputed)
         return;
-    if(V_singleNode->name==program){
+    if (V_singleNode->name == program)
+    {
         TokenListNode *temp = createTokenNode(DOLLAR);
-        appendNodeSet(followSet,temp);
+        appendNodeSet(followSet, temp);
         free(temp);
         return;
     }
@@ -867,7 +869,7 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
         Rule *cur_nt_rule = nt_rules->rulePtr;
         while (cur_nt_rule != NULL)
         {
-            //printf("rule_no: %d\n", cur_nt_rule->ruleNo);
+            // printf("rule_no: %d\n", cur_nt_rule->ruleNo);
             computeFollowHelper(G, F, V, cur_nt_rule);
             cur_nt_rule = cur_nt_rule->next;
         }
@@ -887,7 +889,7 @@ void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R)
         addSets(followSet, F->table[R->non_terminal]->followSet, false);
         return;
     }
-    
+
     while (temp_node != NULL)
     {
         ffSingleNode *temp_node_ff = F->table[temp_node->type.non_terminal];
@@ -1014,82 +1016,80 @@ void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
             }
 
             if (first->containsEps)
+            {
+                TokenList *follow = F->table[i]->followSet;
+
+                TokenListNode *followHead = follow->head;
+
+                for (int k = 0; k < follow->setSize; k++)
                 {
-                    TokenList *follow = F->table[i]->followSet;
 
-                    TokenListNode *followHead = follow->head;
-
-                    for (int k = 0; k < follow->setSize; k++)
+                    if (T->check[i][(int)followHead->name])
                     {
-
-                        if (T->check[i][(int)followHead->name])
-                        {
-                            printf("Error in generation of parse table, duplicate entries in %d, %d \n", i, (int)followHead->name);
-                        }
-                        else
-                        {
-                            Rule *epsRule = allocRule(i, -1);
-                            SymbolNode *epsNode = allocSymbol(EPSILON, true);
-                            appendSymbolList(epsRule->product, epsNode);
-
-                            // inke liye functions bane hai
-                            // oh, kaunsa?
-                            // allocR
-
-                            T->table[i][(int)followHead->name] = epsRule;
-                            T->check[i][(int)followHead->name] = true;
-                        }
-
-                        followHead = followHead->next;
+                        printf("Error in generation of parse table, duplicate entries in %d, %d \n", i, (int)followHead->name);
                     }
+                    else
+                    {
+                        Rule *epsRule = allocRule(i, -1);
+                        SymbolNode *epsNode = allocSymbol(EPSILON, true);
+                        appendSymbolList(epsRule->product, epsNode);
+
+                        // inke liye functions bane hai
+                        // oh, kaunsa?
+                        // allocR
+
+                        T->table[i][(int)followHead->name] = epsRule;
+                        T->check[i][(int)followHead->name] = true;
+                    }
+
+                    followHead = followHead->next;
                 }
+            }
 
             rule = rule->next;
         }
     }
 }
-void printParseTable(Table * T)
+void printParseTable(Table *T)
 {
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR"};
     const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion", "moreExpansions", "option_single_constructed", "elsePart", "fieldType"};
 
-    for (int i = 0 ; i < NO_OF_NONTERMINALS; i++)
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
-        for(int j = 0; j < NO_OF_TERMINALS; j++)
+        for (int j = 0; j < NO_OF_TERMINALS; j++)
         {
-            //printf("%s %s", non_terminals[i], terminals[j]);
+            // printf("%s %s", non_terminals[i], terminals[j]);
             Rule *r = T->table[i][j];
-            if(r)
+            if (r)
             {
                 printf("%s %s:   ", non_terminals[i], terminals[j]);
-                
+
                 printf("%s --> ", non_terminals[r->non_terminal]);
-                SymbolNode* n;
+                SymbolNode *n;
                 n = r->product->head;
-                while(n!=NULL)
+                while (n != NULL)
                 {
-                    if(n->isTerm)
+                    if (n->isTerm)
                     {
-                        
-                        printf("%s ",terminals[n->type.terminal]);
-                
+
+                        printf("%s ", terminals[n->type.terminal]);
                     }
-                    else 
+                    else
                     {
                         printf("%s ", non_terminals[n->type.non_terminal]);
-                
                     }
-                    //printf(" ");
+                    // printf(" ");
                     n = n->next;
                 }
                 printf("\n");
             }
-            else{
-                //printf("NULL");
+            else
+            {
+                // printf("NULL");
             }
         }
     }
-
 }
 int main()
 {
@@ -1103,18 +1103,17 @@ int main()
         printf("failed to open file\n");
     }
     Grammar *G = generateGrammar(fp);
-    //printGrammar(G);
+    // printGrammar(G);
 
     printf("grammar generated\n");
 
     FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
     allocSets(F);
 
-    printf("start compute first\n"); 
+    printf("start compute first\n");
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
         computeFirst(G, F, (nonTerminal)i);
-
     }
     printf("end of compute first\n");
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
@@ -1122,23 +1121,22 @@ int main()
         nonTerminal V = i;
 
         // TokenList *followSet = F->table[i]->followSet;
-        //printf("start compute Follow\n");
+        // printf("start compute Follow\n");
         // TokenListNode *head = followSet->head;
 
         computeFollow(G, F, V);
 
-        TokenList * followSet = F->table[i]->followSet; 
-        TokenListNode * head = followSet->head;
-        //printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+        TokenList *followSet = F->table[i]->followSet;
+        TokenListNode *head = followSet->head;
+        // printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
         for (int i = 0; i < followSet->setSize; i++)
         {
-             //printf("%s, ", terminals[head->name]);
-             head = head->next;
+            // printf("%s, ", terminals[head->name]);
+            head = head->next;
         }
-        //printf("\n");
-        
+        // printf("\n");
     }
-    Table * T = allocParseTable();
-    createParseTable(F, G, T );
+    Table *T = allocParseTable();
+    createParseTable(F, G, T);
     printParseTable(T);
 }

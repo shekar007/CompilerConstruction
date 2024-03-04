@@ -65,7 +65,13 @@ typedef enum
     idList,
     more_ids,
     definetypestmt,
-    A
+    A,
+    actualOrRedefined,
+    oneExpansion,
+    moreExpansions,
+    option_single_constructed,
+    elsePart,
+    fieldType
 } nonTerminal;
 
 typedef union
@@ -149,19 +155,24 @@ typedef struct table // parse table
 
 } Table;
 
-typedef struct TreeNode
+typedef struct TreeNode TreeNode;
+typedef struct childElement childElement;
+
+struct childElement
 {
-    symbolType *element;
+    TreeNode *element;
+    childElement *next;
+};
+
+struct TreeNode
+{
+    symbolType element;
     childElement *headChild;
     int isTerminal;
     int noChild;
 
-} TreeNode;
-typedef struct childElement
-{
-    TreeNode *element;
-    childElement *next;
-} childElement;
+};
+
 
 typedef struct stackNode
 {

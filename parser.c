@@ -113,6 +113,7 @@ TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *curr
             // return error in parsing
         }
         SymbolList *ruleList = r->product;
+        pushIntoStack(stack, ruleList);
         SymbolNode *ptr = ruleList->tail;
         LLNode *headptr;
         while (ptr != NULL)

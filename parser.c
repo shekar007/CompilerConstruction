@@ -4,12 +4,10 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "lexer.h"
-#include "lexerDef.h"
 #include "parser.h"
 #include "parserDef.h"
-
-#define LINE_SIZE 200 * sizeof(char)
+#include "lexer.h"
+#include "lexerDef.h"
 #define LINE_SIZE 200 * sizeof(char)
 
 Stack *createStack()
@@ -156,6 +154,7 @@ void allocTreeNode(TreeNode *root)
     root->headChild = NULL;
     return root;
 }
+
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -517,30 +516,6 @@ nonTerminal stringToNonTerminal(char *str)
     {
         return arithmeticExpression;
     }
-    else if (strcmp(str, "term") == 0)
-    {
-        return term;
-    }
-    else if (strcmp(str, "expPrime") == 0)
-    {
-        return expPrime;
-    }
-    else if (strcmp(str, "termPrime") == 0)
-    {
-        return termPrime;
-    }
-    else if (strcmp(str, "factor") == 0)
-    {
-        return factor;
-    }
-    else if (strcmp(str, "highPrecedenceOperators") == 0)
-    {
-        return highPrecedenceOperators;
-    }
-    else if (strcmp(str, "lowPrecedenceOperators") == 0)
-    {
-        return lowPrecedenceOperators;
-    }
     else if (strcmp(str, "booleanExpression") == 0)
     {
         return booleanExpression;
@@ -654,28 +629,24 @@ Grammar *generateGrammar(FILE *fp)
 }
 void printGrammar(Grammar *G)
 {
-
-    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "operator", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
-
     Rules **R = G->rules;
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
         Rule *cur_rule = G->rules[i]->rulePtr;
         while (cur_rule != NULL)
         {
-            printf("NT:%s--->", non_terminals[i]);
+            printf("NT:%d--->", i);
             SymbolList *list = cur_rule->product;
             SymbolNode *temp = list->head;
             while (temp != NULL)
             {
                 if (temp->isTerm)
                 {
-                    printf("%s ", terminals[temp->type.terminal]);
+                    printf("%d ", temp->type.terminal);
                 }
                 else
                 {
-                    printf("%s ", non_terminals[temp->type.non_terminal]);
+                    printf("%d ", temp->type.non_terminal);
                 }
                 temp = temp->next;
             }
@@ -684,7 +655,19 @@ void printGrammar(Grammar *G)
         }
     }
 }
+int main()
+{
+    FILE *fp = fopen("modified_grammar.txt", "r");
+    if (fp == NULL)
+    {
+        printf("failed to open file\n");
+    }
+    Grammar *G = generateGrammar(fp);
+    Table *T = allocParseTable();
+    FirstAndFollow *F;
 
+    printGrammar(G);
+}
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
@@ -777,39 +760,20 @@ TokenList *allocTokenList()
     setPtr->setSize = 0;
     setPtr->head = NULL;
     setPtr->tail = NULL;
-    setPtr->computed = false;
-    // memset(setPtr->is_present, false, 59*sizeof(bool));
-    return setPtr;
 }
 void allocSets(FirstAndFollow *F)
 {
     F->table = (ffSingleNode **)malloc(NO_OF_NONTERMINALS * sizeof(ffSingleNode *));
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
-        F->table[i] = (ffSingleNode *)malloc(sizeof(ffSingleNode));
-        F->table[i]->name = i;
         F->table[i]->firstSet = allocTokenList();
         F->table[i]->followSet = allocTokenList();
     }
 }
-
-// doesn't work like sets, has duplicate values
 void appendNodeSet(TokenList *L, TokenListNode *node)
 {
-    if (L->tail == NULL)
-    {
-        L->tail = node;
-        L->head = node;
-        // L->head->next = L->tail;
-        L->setSize = 1;
-        // L->is_present[node->name] = true;
-    }
-    else
-    {
-        L->tail->next = node;
-        L->tail = L->tail->next;
-        L->setSize += 1;
-    }
+    L->tail->next = node;
+    L->tail = L->tail->next;
 }
 void resetTailSet(TokenList *L)
 {
@@ -855,10 +819,7 @@ void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
     while (set2_head != NULL)
     {
         if (set2_head->name == EPSILON && !addEpsilon)
-        {
-            set2_head = set2_head->next;
             continue;
-        }
         if (!isNodeInSet(set1, set2_head))
         {
             appendNodeSet(set1, set2_head);
@@ -875,12 +836,9 @@ ffSingleNode *returnFFSingleNode(FirstAndFollow *F, nonTerminal V)
 }
 // hash table ki tarah karna hai kya?
 // lamba padhega but bahut
+
 void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
 {
-    if (node->firstSet->computed)
-    {
-        return;
-    }
     Rules *V_productions = G->rules[(int)V];
     Rule *V_production = V_productions->rulePtr; // pointer to first V production
     TokenList *L = node->firstSet;
@@ -901,24 +859,22 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             {
                 ffSingleNode *node2 = returnFFSingleNode(F, temp->type.non_terminal);
                 TokenList *set2 = node2->firstSet;
-                computeFirst(G, F, temp->type.non_terminal, node2);
+                if (!node2->firstComputed)
+                {
+                    computeFirst(G, F, temp->type.non_terminal, node2);
+                }
                 addSets(L, set2, false);
                 if (!isNodeInSet(set2, createTokenNode(EPSILON)))
                     break;
             }
-
-            temp = temp->next;
         }
         if (j == S->productionLength)
         {
             appendNodeSet(L, createTokenNode(EPSILON));
         }
-        V_production = V_production->next;
     }
-    node->firstSet->computed = true;
     return;
 }
-
 SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
 {
     SymbolNode *temp = S->head;
@@ -932,9 +888,6 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
     }
     return NULL;
 }
-
-//---------------------------------------------------------------------
-
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
 {
     TokenList *followSet = F->table[(int)V]->followSet;
@@ -981,6 +934,7 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
         }
     }
 }
+
 bool contains_eps(TokenList *T)
 {
     TokenListNode *ln = T->head;
@@ -1011,7 +965,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
             appendNodeSet(rhsFirstSet, createTokenNode(temp->type.terminal));
             break;
         }
-        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal]->firstSet, true);
+        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal], true);
         ffSingleNode *tempNode = returnFFSingleNode(F, temp->type.non_terminal);
         TokenList *tempList = tempNode->firstSet;
         if (!isNodeInSet(tempList, createTokenNode(EPSILON)))
@@ -1022,7 +976,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
     }
     return rhsFirstSet;
 }
-// bc liveshare terminal c used to access chandus entire lap
+
 Table *allocParseTable()
 {
 
@@ -1113,42 +1067,15 @@ void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
     }
 }
 
-int main()
-{
-
-    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
-
-    FILE *fp = fopen("modified_grammar.txt", "r");
-    if (fp == NULL)
-    {
-        printf("failed to open file\n");
-    }
-    Grammar *G = generateGrammar(fp);
-    // printGrammar(G);
-
-    FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
-    // F->table[(int)arithmeticExpression];
-    // return 0;
-
-    allocSets(F);
-
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
-
-        nonTerminal V = i;
-
-        computeFirst(G, F, V, F->table[i]);
-
-        TokenList *firstSet = F->table[i]->firstSet;
-        TokenListNode *head = firstSet->head;
-
-        printf("First(%s) %d: ", non_terminals[(int)V], (int)V);
-        for (int i = 0; i < firstSet->setSize; i++)
-        {
-            printf("%s, ", terminals[head->name]);
-            head = head->next;
-        }
-        printf("\n");
-    }
-}
+// E -> E'T | T
+//  E ->E'T
+//  E -> T
+// E'-> f
+// T -> t
+// first(E) = f, t
+// first(E')
+// first(T)
+//  alpha = E'T
+//  beta = T
+//  first(alpha) =
+//  parseDef mai kya red dikha raha. suggestions han ab done hone band ho gye uski vajah se

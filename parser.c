@@ -722,6 +722,8 @@ void allocSets(FirstAndFollow *F)
     F->table = (ffSingleNode **)malloc(NO_OF_NONTERMINALS * sizeof(ffSingleNode *));
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
+        F->table[i] = (ffSingleNode *)malloc(sizeof(ffSingleNode));
+        F->table[i]->name = i;
         F->table[i]->firstSet = allocTokenList();
         F->table[i]->followSet = allocTokenList();
     }
@@ -1099,8 +1101,11 @@ int main()
     }
     Grammar *G = generateGrammar(fp);
     printGrammar(G);
-    FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
+
     printf("grammar generated\n");
+
+    FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
+    allocSets(F);
 
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {

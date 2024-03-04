@@ -160,7 +160,6 @@ void allocTreeNode(TreeNode *root)
     root->isTerminal = 0;
     root->headChild = NULL;
 }
-
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -607,19 +606,6 @@ void printGrammar(Grammar *G)
         }
     }
 }
-// int main()
-// {
-//     FILE *fp = fopen("modified_grammar.txt", "r");
-//     if (fp == NULL)
-//     {
-//         printf("failed to open file\n");
-//     }
-//     Grammar *G = generateGrammar(fp);
-//     Table *T = allocParseTable();
-//     FirstAndFollow *F;
-
-//     printGrammar(G);
-// }
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
@@ -653,7 +639,6 @@ void appendSymbolList(SymbolList *L, SymbolNode *node)
     L->tail = node;
     L->productionLength++;
 }
-
 Rule *allocRule(nonTerminal V, int ruleNo)
 {
     Rule *newRule = (Rule *)malloc(sizeof(Rule));
@@ -663,8 +648,6 @@ Rule *allocRule(nonTerminal V, int ruleNo)
     newRule->non_terminal = V;
     return newRule;
 }
-// structure change kiya
-// pooch raha hai ya bata raha
 SymbolNode *allocSymbol(int enumIndex, bool isTerm)
 {
     SymbolNode *S = (SymbolNode *)malloc(sizeof(SymbolNode));
@@ -698,7 +681,6 @@ void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R)
         temp->next = R;
     }
 }
-
 TokenListNode *createTokenNode(TokenName name)
 {
     TokenListNode *temp = (TokenListNode *)malloc(sizeof(TokenListNode));
@@ -788,7 +770,6 @@ bool isNodeInSet(TokenList *L, TokenListNode *node)
     }
     return false;
 }
-
 void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
 {
     TokenListNode *set2_head = set2->head;
@@ -804,15 +785,10 @@ void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
     }
     resetTailSet(set1);
 }
-
-// O(n) searching? should be O(1). convert enum nonTerminal to int directly and use as index shi aise hi use krle wtf
 ffSingleNode *returnFFSingleNode(FirstAndFollow *F, nonTerminal V)
 {
     return F->table[(int)V];
 }
-// hash table ki tarah karna hai kya?
-// lamba padhega but bahut
-
 void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V)
 {
     Rules *V_productions = G->rules[(int)V];
@@ -956,7 +932,6 @@ bool contains_eps(TokenList *T)
     }
     return false;
 }
-
 TokenList *returnFirstOfVariable(FirstAndFollow *F, nonTerminal V)
 {
     return returnFFSingleNode(F, V)->firstSet;
@@ -997,7 +972,6 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
     }
     return rhsFirstSet;
 }
-
 Table *allocParseTable()
 {
 
@@ -1012,7 +986,6 @@ Table *allocParseTable()
     }
     return T;
 }
-
 void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
 {
     Rules **allRules = G->rules;

@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct twinBuffer
+{
+    char *buffer1; // Declare buffer1 as a pointer
+    char *buffer2;
+
+} twinBuffer;
 typedef enum
 {
     TK_ASSIGNOP,

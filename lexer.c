@@ -22,12 +22,7 @@
 #include "symbolTable.h"
 #endif
 #define BUFFER_SIZE 10
-typedef struct twinBuffer
-{
-    char *buffer1; // Declare buffer1 as a pointer
-    char *buffer2;
 
-} twinBuffer;
 twinBuffer *buffer;
 symTable *symbolTable;
 bool bufferChoice = 0;
@@ -110,7 +105,7 @@ FILE *getStream(FILE *fp)
 
     if (feof(fp))
     {
-        printf("reached eof\n");
+        // printf("reached eof\n");
         getstreamnull = 1;
         // bufferChoice = !bufferChoice;
         return NULL;
@@ -1388,9 +1383,55 @@ void printToken(Token *t)
     printf("Lexeme : %s\n", t->lexeme);
     printf("------------------- \n");
 }
-int main()
-{
+// int main()
+// {
 
+//     // Allocate memory for buffers
+//     symbolTable = createEmptyTable(50);
+//     addKeywords(symbolTable);
+
+//     buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
+//     buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
+//     if (buffer->buffer1 == NULL)
+//     {
+//         fprintf(stderr, "Memory allocation failed for buffer1\n");
+//         return 1; // Exit with failure status
+//     }
+//     buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
+//     if (buffer->buffer2 == NULL)
+//     {
+//         fprintf(stderr, "Memory allocation failed for buffer1\n");
+//         return 1; // Exit with failure status
+//     }
+//     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+//     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+//     FILE *fileptr = fopen("testCaseFile.txt", "r");
+//     if (fileptr == NULL)
+//     {
+//         printf("Error in operning \n");
+//         return 1;
+//     }
+//     while (true)
+//     {
+//         // printf("entered while\n");
+//         Token *tokenReturned = getNextToken(fileptr);
+//         if (tokenReturned == NULL)
+//         {
+//             break;
+//         }
+//         else
+//         {
+//             printToken(tokenReturned);
+//         }
+//     }
+
+//     fclose(fileptr);
+
+//     return 0;
+// }
+
+void initializations()
+{
     // Allocate memory for buffers
     symbolTable = createEmptyTable(50);
     addKeywords(symbolTable);
@@ -1400,37 +1441,15 @@ int main()
     if (buffer->buffer1 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
-        return 1; // Exit with failure status
     }
     buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
     if (buffer->buffer2 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
-        return 1; // Exit with failure status
+        // Exit with failure status
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
-    FILE *fileptr = fopen("t4.txt", "r");
-    if (fileptr == NULL)
-    {
-        printf("Error in operning \n");
-        return 1;
-    }
-    while (true)
-    {
-        // printf("entered while\n");
-        Token *tokenReturned = getNextToken(fileptr);
-        if (tokenReturned == NULL)
-        {
-            break;
-        }
-        else
-        {
-            printToken(tokenReturned);
-        }
-    }
 
-    fclose(fileptr);
-
-    return 0;
+    //
 }

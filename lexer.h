@@ -5,9 +5,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lexerDef.h"
-
+void initializations();
 FILE *getStream(FILE *fp);
-TokenName *getNextToken(FILE *fileptr);
+void printToken(Token *t);
+Token *getNextToken(FILE *fileptr);
 #endif
-
-

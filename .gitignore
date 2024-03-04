@@ -5,6 +5,7 @@
 *.pyc
 *.dSYM
 *.out
+*exe
 parser_exe
 
 # Ignore logs and temporary files

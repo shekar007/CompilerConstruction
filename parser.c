@@ -573,8 +573,8 @@ void printGrammar(Grammar *G)
 {
 
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion", "moreExpansions", "option_single_constructed", "elsePart", "fieldType"};
-
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
+    };
     Rules **R = G->rules;
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
@@ -620,6 +620,7 @@ SymbolList *allocSymbolList()
     list->productionLength = 0;
     list->head = NULL;
     list->tail = NULL;
+    return list;
 }
 void appendSymbolList(SymbolList *L, SymbolNode *node)
 {
@@ -703,6 +704,9 @@ void allocSets(FirstAndFollow *F)
         F->table[i]->name = i;
         F->table[i]->firstSet = allocTokenList();
         F->table[i]->followSet = allocTokenList();
+        F->table[i]->firstComputed = false;
+        F->table[i]->followComputed = false;
+        F->table[i]->inFollow = false;
     }
 }
 void appendNodeSet(TokenList *L, TokenListNode *node)
@@ -847,7 +851,11 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
     return NULL;
 }
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
-{
+{   
+    F->table[(int)V]->inFollow = true;
+    if(F->table[(int)V]->followComputed){
+        return;
+    }
     ffSingleNode *V_singleNode = F->table[(int)V];
     TokenList *followSet = F->table[(int)V]->followSet;
     if (V_singleNode->followComputed)
@@ -857,6 +865,7 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
         TokenListNode *temp = createTokenNode(DOLLAR);
         appendNodeSet(followSet, temp);
         free(temp);
+        F->table[(int)program]->followComputed = true;
         return;
     }
     // if(V==DOLLAR){
@@ -874,9 +883,12 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
             cur_nt_rule = cur_nt_rule->next;
         }
     }
+    F->table[(int)V]->followComputed = true;
+    F->table[(int)V]->inFollow = false;
 }
 void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R)
 {
+
     ffSingleNode *V_singleNode = F->table[(int)V];
     TokenList *followSet = F->table[(int)V]->followSet;
     SymbolList *sym_list = R->product;
@@ -886,6 +898,11 @@ void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R)
     SymbolNode *temp_node = V_sym_node->next;
     if (temp_node == NULL)
     {
+        //computeFollow(G, F, R->non_terminal);
+        if(!F->table[R->non_terminal]->followComputed && !F->table[(int)R->non_terminal]->inFollow){
+            computeFollow(G, F, R->non_terminal);
+        }
+        TokenList * fs = F->table[R->non_terminal]->followSet;
         addSets(followSet, F->table[R->non_terminal]->followSet, false);
         return;
     }
@@ -1053,8 +1070,8 @@ void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
 void printParseTable(Table *T)
 {
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion", "moreExpansions", "option_single_constructed", "elsePart", "fieldType"};
-
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
+    };
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
         for (int j = 0; j < NO_OF_TERMINALS; j++)
@@ -1095,8 +1112,8 @@ int main()
 {
 
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion", "moreExpansions", "option_single_constructed", "elsePart", "fieldType"};
-
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
+};
     FILE *fp = fopen("modified_grammar.txt", "r");
     if (fp == NULL)
     {
@@ -1120,21 +1137,23 @@ int main()
     {
         nonTerminal V = i;
 
+       
         // TokenList *followSet = F->table[i]->followSet;
         // printf("start compute Follow\n");
         // TokenListNode *head = followSet->head;
 
         computeFollow(G, F, V);
-
+        continue;
+        
         TokenList *followSet = F->table[i]->followSet;
         TokenListNode *head = followSet->head;
-        // printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+        printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
         for (int i = 0; i < followSet->setSize; i++)
         {
-            // printf("%s, ", terminals[head->name]);
+            printf("%s, ", terminals[head->name]);
             head = head->next;
         }
-        // printf("\n");
+        printf("\n");
     }
     Table *T = allocParseTable();
     createParseTable(F, G, T);

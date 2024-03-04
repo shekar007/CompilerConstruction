@@ -561,7 +561,7 @@ Token *getNextToken(FILE *fileptr)
             if (currentBuffer(buffer)[fwdptr] == '=')
             {
                 state = 17;
-                lex_ptr++;
+                fwdptr++;
             }
             else
             {
@@ -1410,7 +1410,7 @@ int main()
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
-    FILE *fileptr = fopen("testCaseFile.txt", "r");
+    FILE *fileptr = fopen("t4.txt", "r");
     if (fileptr == NULL)
     {
         printf("Error in operning \n");

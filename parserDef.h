@@ -32,9 +32,11 @@ typedef enum
     remaining_list,
     stmts,
     typeDefinitions,
+    actualOrRedefined,
     typeDefinition,
     fieldDefinitions,
     fieldDefinition,
+    fieldType,
     moreFields,
     declarations,
     declaration,
@@ -43,15 +45,19 @@ typedef enum
     stmt,
     assignmentStmt,
     singleOrRecId,
+    option_single_constructed,
+    oneExpansion,
+    moreExpansions,
     funCallStmt,
     outputParameters,
     inputParameters,
     iterativeStmt,
     conditionalStmt,
+    elsePart,
     ioStmt,
     arithmeticExpression,
-    term,
     expPrime,
+    term,
     termPrime,
     factor,
     highPrecedenceOperators,
@@ -65,13 +71,7 @@ typedef enum
     idList,
     more_ids,
     definetypestmt,
-    A,
-    actualOrRedefined,
-    oneExpansion,
-    moreExpansions,
-    option_single_constructed,
-    elsePart,
-    fieldType
+    A
 } nonTerminal;
 
 typedef union
@@ -136,6 +136,7 @@ typedef struct ffSingleNode
     struct ffSingleNode *next; // storing address of next node in linked list
     bool firstComputed;
     bool followComputed;
+    bool inFollow;
 } ffSingleNode;
 
 // firstAndFollow is implemented as a hash table with the key being the name of the non-terminal.
@@ -184,4 +185,5 @@ typedef struct Stack
 {
     stackNode *top;
 } Stack;
+
 #endif

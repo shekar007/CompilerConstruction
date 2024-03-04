@@ -839,13 +839,81 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
 }
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
 {
-    
+    ffSingleNode *V_singleNode = F->table[(int)V];
+    TokenList *followSet = F->table[(int)V]->followSet;
+    if (V_singleNode->followComputed)
+        return;
+    // if(V==DOLLAR){
+    //     addDOLLAR;
+    // } // TO BE COMPLETED!
+
+    for (int nt = 0; nt < NO_OF_NONTERMINALS; nt++)
+    {
+        Rules *nt_rules = G->rules[nt];
+        Rule *cur_nt_rule = nt_rules->rulePtr;
+
+        while (cur_nt_rule != NULL)
+        {
+            computeFollowHelper(G, F, V, cur_nt_rule);
+            cur_nt_rule = cur_nt_rule->next;
+        }
+    }
+}
+void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R)
+{
+    ffSingleNode *V_singleNode = F->table[(int)V];
+    TokenList *followSet = F->table[(int)V]->followSet;
+    SymbolList *sym_list = R->product;
+    SymbolNode *V_sym_node = returnSymbolFromList(sym_list, V);
+    if (V_sym_node == NULL)
+        return;
+    SymbolNode *temp_node = V_sym_node->next;
+    if (temp_node == NULL)
+    {
+        addSets(followSet, F->table[R->non_terminal]->followSet, false);
+        return;
+    }
+    while (temp_node != NULL)
+    {
+        ffSingleNode *temp_node_ff = F->table[temp_node->type.non_terminal];
+        TokenList *temp_node_first = temp_node_ff->firstSet;
+        TokenList *temp_node_follow = temp_node_ff->followSet;
+        if (temp_node->isTerm)
+        {
+            TokenListNode *temp = createTokenNode(temp_node->type.terminal);
+            if (!isNodeInSet(followSet, temp))
+            {
+                appendNodeSet(followSet, temp);
+            }
+            else
+            {
+                free(temp);
+            }
+            return;
+        }
+        else
+        {
+            addSets(followSet, temp_node_first, false);
+            if (!contains_eps(temp_node_first))
+            {
+                return;
+            }
+            temp_node = temp_node->next;
+        }
+    }
+    ffSingleNode *lhs = F->table[R->non_terminal];
+    if (!lhs->followComputed)
+    {
+        computeFollow(G, F, lhs->name);
+    }
+    TokenList *lhs_follow = lhs->followSet;
+    addSets(followSet, lhs_follow, false);
+    return;
 }
 bool contains_eps(TokenList *T)
 {
     TokenListNode *ln = T->head;
-
-    for (int i = 0; i < T->setSize; i++)
+    while (ln != NULL)
     {
         if (ln->name == EPSILON)
         {
@@ -872,7 +940,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
             appendNodeSet(rhsFirstSet, createTokenNode(temp->type.terminal));
             break;
         }
-        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal], true);
+        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal]->firstSet, true);
         ffSingleNode *tempNode = returnFFSingleNode(F, temp->type.non_terminal);
         TokenList *tempList = tempNode->firstSet;
         if (!isNodeInSet(tempList, createTokenNode(EPSILON)))

@@ -4,12 +4,9 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "lexer.h"
-#include "lexerDef.h"
 #include "parser.h"
 #include "parserDef.h"
 
-#define LINE_SIZE 200 * sizeof(char)
 #define LINE_SIZE 200 * sizeof(char)
 
 Stack *createStack()
@@ -65,12 +62,13 @@ TreeNode *top(Stack *stack)
 TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int tokenArrayLength)
 {
     // pass length of tokenarray and variable = tokenArrayLength
-    TreeNode *root = (TreeNode *)malloc(sizeof(TreeNode));
+    TreeNode *root;
+    allocTreeNode(root);
     root->isTerminal = 0;
-    root->element = NULL;
+    root->element.non_terminal = -1;
     Stack *stack = createStack();
     push(stack, program);
-    root->element = program;
+    root->element.non_terminal = program;
     int tokenptr = 0;
     int stringptr = 0;
 
@@ -87,7 +85,7 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
         /*
         change in parse tree when popping
         */
-        Rule *r = T->table[n->element->non_terminal][tokenArray[tokenptr]->name];
+        Rule *r = T->table[n->element.non_terminal][tokenArray[tokenptr]->name];
         SymbolList *ruleList = r->product;
         SymbolNode *ptr = ruleList->tail;
         while (ptr != NULL)
@@ -105,29 +103,29 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
             }
             ele->noChild = 0;
             ele->headChild = NULL;
-            ele->element = ptr;
+            ele->element = ptr->type;
             push(stack, ele);
             n->noChild++;
 
             if (headptr == NULL)
             {
-                headptr = ele;
+                headptr = ele->headChild;
                 headptr = headptr->next;
             }
             else
             {
-                headptr->next = ele;
+                headptr->next = ele->headChild;
                 headptr = headptr->next;
             }
             ptr = ptr->prev;
-            if (root->element == NULL)
+            if (root->element.non_terminal == -1)
             {
-                root->headChild = n;
+                root->headChild = n->headChild;
                 root->noChild = 1;
             }
         }
 
-        while (top(stack) == tokenArray[tokenptr] || top(stack) == EPSILON)
+        while (top(stack)->element.terminal == tokenArray[tokenptr]->name || top(stack)->element.terminal == EPSILON)
         {
             pop(stack);
             tokenptr++;
@@ -138,7 +136,7 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
     }
     if (tokenptr == tokenArrayLength)
     {
-        return root->headChild;
+        return root->headChild->element;
         // successfully parsed
     }
     else
@@ -149,13 +147,13 @@ TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int to
 }
 void allocTreeNode(TreeNode *root)
 {
-    TreeNode *root = (TreeNode *)malloc(sizeof(TreeNode));
-    root->element = NULL;
+    root = (TreeNode *)malloc(sizeof(TreeNode));
+    root->element.non_terminal = -1;
     root->noChild = 0;
     root->isTerminal = 0;
     root->headChild = NULL;
-    return root;
 }
+
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -394,193 +392,111 @@ TokenName stringToTokenName(char *str)
 nonTerminal stringToNonTerminal(char *str)
 {
     if (strcmp(str, "program") == 0)
-    {
         return program;
-    }
     else if (strcmp(str, "mainFunction") == 0)
-    {
         return mainFunction;
-    }
     else if (strcmp(str, "otherFunctions") == 0)
-    {
         return otherFunctions;
-    }
     else if (strcmp(str, "function") == 0)
-    {
         return function;
-    }
     else if (strcmp(str, "input_par") == 0)
-    {
         return input_par;
-    }
     else if (strcmp(str, "output_par") == 0)
-    {
         return output_par;
-    }
     else if (strcmp(str, "parameter_list") == 0)
-    {
         return parameter_list;
-    }
     else if (strcmp(str, "dataType") == 0)
-    {
         return dataType;
-    }
     else if (strcmp(str, "primitiveDatatype") == 0)
-    {
         return primitiveDatatype;
-    }
     else if (strcmp(str, "constructedDatatype") == 0)
-    {
         return constructedDatatype;
-    }
     else if (strcmp(str, "remaining_list") == 0)
-    {
         return remaining_list;
-    }
     else if (strcmp(str, "stmts") == 0)
-    {
         return stmts;
-    }
     else if (strcmp(str, "typeDefinitions") == 0)
-    {
         return typeDefinitions;
-    }
     else if (strcmp(str, "typeDefinition") == 0)
-    {
         return typeDefinition;
-    }
     else if (strcmp(str, "fieldDefinitions") == 0)
-    {
         return fieldDefinitions;
-    }
     else if (strcmp(str, "fieldDefinition") == 0)
-    {
         return fieldDefinition;
-    }
     else if (strcmp(str, "moreFields") == 0)
-    {
         return moreFields;
-    }
     else if (strcmp(str, "declarations") == 0)
-    {
         return declarations;
-    }
     else if (strcmp(str, "declaration") == 0)
-    {
         return declaration;
-    }
     else if (strcmp(str, "global_or_not") == 0)
-    {
         return global_or_not;
-    }
     else if (strcmp(str, "otherStmts") == 0)
-    {
         return otherStmts;
-    }
     else if (strcmp(str, "stmt") == 0)
-    {
         return stmt;
-    }
     else if (strcmp(str, "assignmentStmt") == 0)
-    {
         return assignmentStmt;
-    }
     else if (strcmp(str, "singleOrRecId") == 0)
-    {
         return singleOrRecId;
-    }
     else if (strcmp(str, "funCallStmt") == 0)
-    {
         return funCallStmt;
-    }
     else if (strcmp(str, "outputParameters") == 0)
-    {
         return outputParameters;
-    }
     else if (strcmp(str, "inputParameters") == 0)
-    {
         return inputParameters;
-    }
     else if (strcmp(str, "iterativeStmt") == 0)
-    {
         return iterativeStmt;
-    }
     else if (strcmp(str, "conditionalStmt") == 0)
-    {
         return conditionalStmt;
-    }
     else if (strcmp(str, "ioStmt") == 0)
-    {
         return ioStmt;
-    }
     else if (strcmp(str, "arithmeticExpression") == 0)
-    {
         return arithmeticExpression;
-    }
     else if (strcmp(str, "term") == 0)
-    {
         return term;
-    }
     else if (strcmp(str, "expPrime") == 0)
-    {
         return expPrime;
-    }
     else if (strcmp(str, "termPrime") == 0)
-    {
         return termPrime;
-    }
     else if (strcmp(str, "factor") == 0)
-    {
         return factor;
-    }
     else if (strcmp(str, "highPrecedenceOperators") == 0)
-    {
         return highPrecedenceOperators;
-    }
     else if (strcmp(str, "lowPrecedenceOperators") == 0)
-    {
         return lowPrecedenceOperators;
-    }
     else if (strcmp(str, "booleanExpression") == 0)
-    {
         return booleanExpression;
-    }
     else if (strcmp(str, "var") == 0)
-    {
         return var;
-    }
     else if (strcmp(str, "logicalOp") == 0)
-    {
         return logicalOp;
-    }
     else if (strcmp(str, "relationalOp") == 0)
-    {
         return relationalOp;
-    }
     else if (strcmp(str, "returnStmt") == 0)
-    {
         return returnStmt;
-    }
     else if (strcmp(str, "optionalReturn") == 0)
-    {
         return optionalReturn;
-    }
     else if (strcmp(str, "idList") == 0)
-    {
         return idList;
-    }
     else if (strcmp(str, "more_ids") == 0)
-    {
         return more_ids;
-    }
     else if (strcmp(str, "definetypestmt") == 0)
-    {
         return definetypestmt;
-    }
     else if (strcmp(str, "A") == 0)
-    {
         return A;
-    }
+    else if (strcmp(str, "actualOrRedefined") == 0)
+        return actualOrRedefined;
+    else if (strcmp(str, "oneExpansion") == 0)
+        return oneExpansion;
+    else if (strcmp(str, "moreExpansions") == 0)
+        return moreExpansions;
+    else if (strcmp(str, "option_single_constructed") == 0)
+        return option_single_constructed;
+    else if (strcmp(str, "elsePart") == 0)
+        return elsePart;
+    else if (strcmp(str, "fieldType") == 0)
+        return fieldType;
     else
     {
         return -1;
@@ -656,7 +572,11 @@ void printGrammar(Grammar *G)
 {
 
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "operator", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "operator", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion",
+                                   "moreExpansions",
+                                   "option_single_constructed",
+                                   "elsePart",
+                                   "fieldType"};
 
     Rules **R = G->rules;
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
@@ -664,18 +584,18 @@ void printGrammar(Grammar *G)
         Rule *cur_rule = G->rules[i]->rulePtr;
         while (cur_rule != NULL)
         {
-            printf("NT:%s--->", non_terminals[i]);
+            printf("NT:%d--->", i);
             SymbolList *list = cur_rule->product;
             SymbolNode *temp = list->head;
             while (temp != NULL)
             {
                 if (temp->isTerm)
                 {
-                    printf("%s ", terminals[temp->type.terminal]);
+                    printf("%d ", temp->type.terminal);
                 }
                 else
                 {
-                    printf("%s ", non_terminals[temp->type.non_terminal]);
+                    printf("%d ", temp->type.non_terminal);
                 }
                 temp = temp->next;
             }
@@ -684,7 +604,19 @@ void printGrammar(Grammar *G)
         }
     }
 }
+int main()
+{
+    FILE *fp = fopen("modified_grammar.txt", "r");
+    if (fp == NULL)
+    {
+        printf("failed to open file\n");
+    }
+    Grammar *G = generateGrammar(fp);
+    Table *T = allocParseTable();
+    FirstAndFollow *F;
 
+    printGrammar(G);
+}
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
@@ -777,44 +709,25 @@ TokenList *allocTokenList()
     setPtr->setSize = 0;
     setPtr->head = NULL;
     setPtr->tail = NULL;
-    setPtr->computed = false;
-    // memset(setPtr->is_present, false, 59*sizeof(bool));
-    return setPtr;
 }
 void allocSets(FirstAndFollow *F)
 {
     F->table = (ffSingleNode **)malloc(NO_OF_NONTERMINALS * sizeof(ffSingleNode *));
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
-        F->table[i] = (ffSingleNode *)malloc(sizeof(ffSingleNode));
-        F->table[i]->name = i;
         F->table[i]->firstSet = allocTokenList();
         F->table[i]->followSet = allocTokenList();
     }
 }
-
-// doesn't work like sets, has duplicate values
 void appendNodeSet(TokenList *L, TokenListNode *node)
 {
-    if (L->tail == NULL)
-    {
-        L->tail = node;
-        L->head = node;
-        // L->head->next = L->tail;
-        L->setSize = 1;
-        // L->is_present[node->name] = true;
-    }
-    else
-    {
-        L->tail->next = node;
-        L->tail = L->tail->next;
-        L->setSize += 1;
-    }
+    L->tail->next = node;
+    L->tail = L->tail->next;
 }
 void resetTailSet(TokenList *L)
 {
     TokenListNode *temp = L->head;
-    while (temp->next != NULL)
+    while (temp != NULL && temp->next != NULL)
         temp = temp->next;
     L->tail = temp;
 }
@@ -855,10 +768,7 @@ void addSets(TokenList *set1, TokenList *set2, bool addEpsilon)
     while (set2_head != NULL)
     {
         if (set2_head->name == EPSILON && !addEpsilon)
-        {
-            set2_head = set2_head->next;
             continue;
-        }
         if (!isNodeInSet(set1, set2_head))
         {
             appendNodeSet(set1, set2_head);
@@ -875,12 +785,9 @@ ffSingleNode *returnFFSingleNode(FirstAndFollow *F, nonTerminal V)
 }
 // hash table ki tarah karna hai kya?
 // lamba padhega but bahut
+
 void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node)
 {
-    if (node->firstSet->computed)
-    {
-        return;
-    }
     Rules *V_productions = G->rules[(int)V];
     Rule *V_production = V_productions->rulePtr; // pointer to first V production
     TokenList *L = node->firstSet;
@@ -901,24 +808,22 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *no
             {
                 ffSingleNode *node2 = returnFFSingleNode(F, temp->type.non_terminal);
                 TokenList *set2 = node2->firstSet;
-                computeFirst(G, F, temp->type.non_terminal, node2);
+                if (!node2->firstComputed)
+                {
+                    computeFirst(G, F, temp->type.non_terminal, node2);
+                }
                 addSets(L, set2, false);
                 if (!isNodeInSet(set2, createTokenNode(EPSILON)))
                     break;
             }
-
-            temp = temp->next;
         }
         if (j == S->productionLength)
         {
             appendNodeSet(L, createTokenNode(EPSILON));
         }
-        V_production = V_production->next;
     }
-    node->firstSet->computed = true;
     return;
 }
-
 SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
 {
     SymbolNode *temp = S->head;
@@ -932,71 +837,9 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
     }
     return NULL;
 }
-
-//---------------------------------------------------------------------
-
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
 {
-    TokenList *followSet = F->table[(int)V]->followSet;
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
-
-        Rules *V_productions = G->rules[i];
-        Rule *cur_rule = V_productions->rulePtr;
-        ffSingleNode *V_singleNode = returnFFSingleNode(F,(nonTerminal)i);
-        TokenList *V_followSet = V_singleNode->followSet;
-        while (cur_rule != NULL)
-        {
-            SymbolList *rhs = cur_rule->product;
-            cur_rule = cur_rule->next;
-            SymbolNode *V_rhs = returnSymbolFromList(rhs, V);
-            if (V_rhs == NULL)
-            {
-                continue;
-            }
-            SymbolNode *V_temp = V_rhs->next;
-            while (V_temp != NULL)
-            {
-                ffSingleNode *V_tempSingleNode = F->table[(int)V_temp->type.non_terminal];
-                TokenList *V_tempFollowSet = V_tempSingleNode->followSet;
-                TokenList *V_tempFirstSet = V_tempSingleNode->firstSet;
-                if (V_temp->isTerm)
-                {
-                    if (!isNodeInSet(followSet, createTokenNode(V_temp->type.terminal))){
-                        appendNodeSet(followSet,createTokenNode(V_temp->type.terminal));
-                        break;
-                    }
-                }
-                else
-                {
-                    addSets(followSet, V_tempFirstSet, false);
-                }
-                if(!contains_eps(V_tempFirstSet)){
-                    break;
-                }
-                V_temp = V_temp->next;
-            }
-            bool eps_flag = true;
-            V_temp = V_rhs->next;
-            while(V_temp!=NULL){
-                ffSingleNode *V_tempSingleNode = F->table[(int)V_temp->type.non_terminal];
-                TokenList *V_tempFollowSet = V_tempSingleNode->followSet;
-                TokenList *V_tempFirstSet = V_tempSingleNode->firstSet;
-                if(!contains_eps(V_tempFirstSet)){
-                    eps_flag = false;
-                    break;
-                }
-            }
-            if(eps_flag){
-                if(!V_singleNode->followComputed){
-                    computeFollow(G,F,(nonTerminal)i);
-                }
-                addSets(followSet,V_followSet,false);
-            }
-
-        }
-    }
-    F->table[(int)V]->followComputed = true;
+    
 }
 bool contains_eps(TokenList *T)
 {
@@ -1029,7 +872,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
             appendNodeSet(rhsFirstSet, createTokenNode(temp->type.terminal));
             break;
         }
-        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal]->firstSet, true);
+        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal], true);
         ffSingleNode *tempNode = returnFFSingleNode(F, temp->type.non_terminal);
         TokenList *tempList = tempNode->firstSet;
         if (!isNodeInSet(tempList, createTokenNode(EPSILON)))
@@ -1040,7 +883,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
     }
     return rhsFirstSet;
 }
-// bc liveshare terminal c used to access chandus entire lap
+
 Table *allocParseTable()
 {
 
@@ -1135,8 +978,9 @@ int main()
 {
 
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "typeDefinition", "fieldDefinitions", "fieldDefinition", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "ioStmt", "arithmeticExpression", "term", "expPrime", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A", "actualOrRedefined", "oneExpansion", "moreExpansions", "option_single_constructed", "elsePart", "fieldType"};
 
+    // printf("%d", sizeof(non_terminals)/sizeof(const char*));
     FILE *fp = fopen("modified_grammar.txt", "r");
     if (fp == NULL)
     {
@@ -1144,7 +988,7 @@ int main()
     }
     Grammar *G = generateGrammar(fp);
     // printGrammar(G);
-
+    // return 0;
     FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
     // F->table[(int)arithmeticExpression];
     // return 0;
@@ -1156,13 +1000,13 @@ int main()
 
         nonTerminal V = i;
 
-        computeFirst(G, F, V, F->table[i]);
+        TokenList *followSet = F->table[i]->followSet;
+        TokenListNode *head = followSet->head;
 
-        TokenList *firstSet = F->table[i]->firstSet;
-        TokenListNode *head = firstSet->head;
+        computeFollow(G, F, V);
 
-        printf("First(%s) %d: ", non_terminals[(int)V], (int)V);
-        for (int i = 0; i < firstSet->setSize; i++)
+        printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+        for (int i = 0; i < followSet->setSize; i++)
         {
             printf("%s, ", terminals[head->name]);
             head = head->next;

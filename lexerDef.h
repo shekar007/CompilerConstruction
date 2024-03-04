@@ -63,7 +63,8 @@ typedef enum
     TK_GE,
     TK_NE,
     EPSILON,
-    TK_ERROR
+    TK_ERROR,
+    DOLLAR
 } TokenName;
 
 typedef union

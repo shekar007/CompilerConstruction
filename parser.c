@@ -59,99 +59,99 @@ TreeNode *top(Stack *stack)
     return stack->top->stackEle;
 }
 
-TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int tokenArrayLength)
-{
+// TreeNode *createParseTree(Token **tokenArray, Grammar *grammar, Table *T, int tokenArrayLength)
+// {
     // pass length of tokenarray and variable = tokenArrayLength
-    TreeNode *root;
-    allocTreeNode(root);
-    root->isTerminal = 0;
-<<<<<<< HEAD
-    root->element.non_terminal = -1;
-    Stack *stack = createStack();
-    push(stack, program);
-    root->element.non_terminal = program;
-=======
-    root->element.non_terminal= -1;
-    Stack *stack = createStack();
-    push(stack, program);
-    root->element.non_terminal= program;
->>>>>>> origin/aadit
-    int tokenptr = 0;
-    int stringptr = 0;
+    // TreeNode *root;
+    // allocTreeNode(root);
+    // root->isTerminal = 0;
+// <<<<<<< HEAD   @ CHANDU resolve this
+//     root->element.non_terminal = -1;
+//     Stack *stack = createStack();
+//     push(stack, program);
+//     root->element.non_terminal = program;
+// =======
+//     root->element.non_terminal= -1;
+//     Stack *stack = createStack();
+//     push(stack, program);
+//     root->element.non_terminal= program;
+// >>>>>>> origin/aadit
+//     int tokenptr = 0;
+//     int stringptr = 0;
 
-    while (!isEmpty(stack))
-    {
-        if (tokenptr >= tokenArrayLength)
-        {
-            return NULL;
-        }
-        // first step me kya hoga
-        TreeNode *n = pop(stack);
+//     while (!isEmpty(stack))
+//     {
+//         if (tokenptr >= tokenArrayLength)
+//         {
+//             return NULL;
+//         }
+//         // first step me kya hoga
+//         TreeNode *n = pop(stack);
 
-        childElement *headptr = n->headChild;
-        /*
-        change in parse tree when popping
-        */
-        Rule *r = T->table[n->element.non_terminal][tokenArray[tokenptr]->name];
-        SymbolList *ruleList = r->product;
-        SymbolNode *ptr = ruleList->tail;
-        while (ptr != NULL)
-        {
-            TreeNode *ele;
-            allocTreeNode(ele);
-            // memory for ele
-            if (ptr->isTerm)
-            {
-                ele->isTerminal = 1;
-            }
-            else
-            {
-                ele->isTerminal = 0;
-            }
-            ele->noChild = 0;
-            ele->headChild = NULL;
-            ele->element = ptr->type;
-            push(stack, ele);
-            n->noChild++;
+//         childElement *headptr = n->headChild;
+//         /*
+//         change in parse tree when popping
+//         */
+//         Rule *r = T->table[n->element.non_terminal][tokenArray[tokenptr]->name];
+//         SymbolList *ruleList = r->product;
+//         SymbolNode *ptr = ruleList->tail;
+//         while (ptr != NULL)
+//         {
+//             TreeNode *ele;
+//             allocTreeNode(ele);
+//             // memory for ele
+//             if (ptr->isTerm)
+//             {
+//                 ele->isTerminal = 1;
+//             }
+//             else
+//             {
+//                 ele->isTerminal = 0;
+//             }
+//             ele->noChild = 0;
+//             ele->headChild = NULL;
+//             ele->element = ptr->type;
+//             push(stack, ele);
+//             n->noChild++;
 
-            if (headptr == NULL)
-            {
-                headptr = ele->headChild;
-                headptr = headptr->next;
-            }
-            else
-            {
-                headptr->next = ele->headChild;
-                headptr = headptr->next;
-            }
-            ptr = ptr->prev;
-            if (root->element.non_terminal == -1)
-            {
-                root->headChild = n->headChild;
-                root->noChild = 1;
-            }
-        }
+//             if (headptr == NULL)
+//             {
+//                 headptr = ele->headChild;
+//                 headptr = headptr->next;
+//             }
+//             else
+//             {
+//                 headptr->next = ele->headChild;
+//                 headptr = headptr->next;
+//             }
+//             ptr = ptr->prev;
+//             if (root->element.non_terminal == -1)
+//             {
+//                 root->headChild = n->headChild;
+//                 root->noChild = 1;
+//             }
+//         }
 
-        while (top(stack)->element.terminal == tokenArray[tokenptr]->name || top(stack)->element.terminal == EPSILON)
-        {
-            pop(stack);
-            tokenptr++;
-        }
+//         while (top(stack)->element.terminal == tokenArray[tokenptr]->name || top(stack)->element.terminal == EPSILON)
+//         {
+//             pop(stack);
+//             tokenptr++;
+//         }
 
-        // if it is non-terminal
-        // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
-    }
-    if (tokenptr == tokenArrayLength)
-    {
-        return root->headChild->element;
-        // successfully parsed
-    }
-    else
-    {
-        return NULL;
-    }
-    // stack has been pushed and tree has been initialised
-}
+//         // if it is non-terminal
+//         // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
+//     }
+//     if (tokenptr == tokenArrayLength)
+//     {
+//         return root->headChild->element;
+//         // successfully parsed
+//     }
+//     else
+//     {
+//         return NULL;
+//     }
+//     // stack has been pushed and tree has been initialised
+// }
 void allocTreeNode(TreeNode *root)
 {
     root = (TreeNode *)malloc(sizeof(TreeNode));

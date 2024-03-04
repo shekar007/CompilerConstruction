@@ -10,6 +10,62 @@
 #include "symbolTable.h"
 #define LINE_SIZE 200 * sizeof(char)
 
+
+
+
+
+// Function to initialize an empty stack
+SymStack * createSymStack() {
+    SymStack * temp = (SymStack *) malloc(sizeof(SymStack));
+    temp->symTop = NULL;
+    return temp;
+}
+
+// Function to check if the stack is empty
+bool isSymStackEmpty(SymStack* stack) {
+    return (stack->symTop == NULL);
+}
+
+// Function to push a symbol onto the stack
+void pushSymbol(SymStack* stack, symbolType type, bool isTerm) {
+    SymbolNode* newNode = (SymbolNode*)malloc(sizeof(SymbolNode));
+    if (newNode == NULL) {
+        printf("Memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    newNode->type = type;
+    newNode->isTerm = isTerm;
+    newNode->next = stack->symTop;
+    stack->symTop = newNode;
+}
+
+// Function to pop a symbol from the stack
+void popSymbol(SymStack* stack) {
+    if (isSymStackEmpty(stack)) {
+        printf("Error: Stack underflow.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    SymbolNode* temp = stack->symTop;
+    stack->symTop = temp->next;
+
+    // Free the memory of the popped node
+    //free(temp);
+}
+
+// Function to get the top symbol without popping it
+SymbolNode* symTop(SymStack* stack) {
+    return stack->symTop;
+}
+
+// Function to free the memory used by the stack
+void freeSymStackMemory(SymStack* stack) {
+    while (!isSymStackEmpty(stack)) {
+        popSymbol(stack);
+    }
+}
+
 Stack *createStack()
 {
     Stack *stack = (Stack *)malloc(sizeof(Stack));
@@ -37,7 +93,8 @@ void push(Stack *stack, TreeNode *element)
     newNode->next = stack->top;
     stack->top = newNode;
 }
-TreeNode *pop(Stack *stack)
+
+void pop(Stack *stack)
 {
     if (isEmpty(stack))
     {
@@ -45,10 +102,10 @@ TreeNode *pop(Stack *stack)
         exit(1);
     }
     stackNode *temp = stack->top;
-    TreeNode *data = temp->stackEle;
+    //TreeNode *data = temp->stackEle;
     stack->top = temp->next;
-    free(temp);
-    return data;
+    //free(temp);
+    //free(data);
 }
 TreeNode *top(Stack *stack)
 {
@@ -59,17 +116,23 @@ TreeNode *top(Stack *stack)
     }
     return stack->top->stackEle;
 }
+void pushIntoStack(SymStack *stack, SymbolList *list)
+{
+    SymbolNode * head = list->head;
 
-TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *currtoken)
+    while(head!=NULL){
+        pushSymbol(stack, head->type, head->isTerm);
+        head = head->next;
+    }
+}
+TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T)
 {
     // pass length of tokenarray and variable = tokenArrayLength
-    TreeNode *root;
-    allocTreeNode(&root);
-    // note : give non-terminal to root;
-    root->isTerminal = 0;
-    root->element.non_terminal = -1;
+    
     Stack *stack = createStack();
+    
     TreeNode *prog = (TreeNode *)malloc(sizeof(TreeNode));
+    
     prog->isTerminal = 0;
     prog->element.non_terminal = program;
     prog->noChild = 0;
@@ -78,14 +141,32 @@ TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *curr
     int tokenptr = 0;
     int stringptr = 0;
 
+    Token * currtoken = getNextToken(fileptr);
+
     while (!isEmpty(stack))
     {
+        
         // if currenttoken  == NULL
-        if (currtoken == NULL)
+        while (currtoken->name == TK_ERROR)
         {
-            return NULL;
+            // error note
+            printToken(currtoken);
+            currtoken = getNextToken(fileptr);
         }
-        else if (currtoken->name == TK_COMMENT)
+
+        if(currtoken == NULL){
+            printf("Error");
+            TreeNode * x = top(stack);
+            if(x->isTerminal)
+            {
+                printf("%d", x->element.terminal);
+            }
+            else
+            {
+                printf("%d", x->element.non_terminal);
+            }
+        }
+        if (currtoken->name == TK_COMMENT)
         {
             while (true)
             {
@@ -102,44 +183,59 @@ TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *curr
             }
         }
         // first step me kya hoga
-        TreeNode *x = pop(stack);
+        TreeNode *x = top(stack);
+        pop(stack);
+
         TreeNode **n = &(x);
         /*
         change in parse tree when popping
         */
+
         Rule *r = T->table[x->element.non_terminal][currtoken->name];
-        if (r == NULL)
+        while (r == NULL)
         {
-            // return error in parsing
+            printf("Error: skipping %s\n", currtoken->lexeme);
+            currtoken = getNextToken(fileptr);
+            r = T->table[x->element.non_terminal][currtoken->name];
         }
-        SymbolList *ruleList = r->product;
-        pushIntoStack(stack, ruleList);
-        SymbolNode *ptr = ruleList->tail;
+
+        if(r->product->head->isTerm && r->product->head->type.terminal==SYN){
+            printf("Error at line no: skipping non terminal %d\n", x->element.non_terminal);
+            continue;
+        }
+
+        SymbolList *rhsList = r->product;
+
+        SymStack *stack2 = createSymStack();
+        pushIntoStack(stack2, rhsList);
+        
+        
+        SymbolNode *ptr;
         LLNode *headptr;
-        while (ptr != NULL)
+        while (!isSymStackEmpty(stack2))
         {
+            ptr = symTop(stack2);
+            popSymbol(stack2);
+
             TreeNode *ele;
             allocTreeNode(&ele);
             // memory for ele
+            
             if (ptr->isTerm)
             {
+                ele->element.terminal = ptr->type.terminal;
                 ele->isTerminal = 1;
             }
             else
             {
+                ele->element.non_terminal = ptr->type.non_terminal;
                 ele->isTerminal = 0;
             }
 
             ele->noChild = 0;
             ele->headChild = NULL;
-            if (ptr->isTerm)
-            {
-                ele->element.terminal = ptr->type.terminal;
-            }
-            else
-            {
-                ele->element.non_terminal = ptr->type.non_terminal;
-            }
+           
+           
             (*n)->noChild++;
             push(stack, ele);
 
@@ -147,43 +243,72 @@ TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T, Token *curr
             {
                 (*n)->headChild = (LLNode *)malloc(sizeof(LLNode));
                 (*n)->isTerminal = 0;
-                (*n)->noChild++;
                 (*n)->headChild->element = ele;
                 headptr = (*n)->headChild;
             }
             else
             {
-                headptr = headptr->next;
                 headptr->next = (LLNode *)malloc(sizeof(LLNode));
                 headptr->next->element = ele;
                 headptr = headptr->next;
-            }
-            ptr = ptr->prev;
-            if (root->element.non_terminal == -1)
-            {
-                root->headChild->element = (*n);
-                root->noChild = 1;
-            }
-        }
 
-        while (top(stack)->element.terminal == currtoken->name || top(stack)->element.terminal == EPSILON)
-        {
+            }
+            //ptr = ptr->prev;
+            free(ptr);
+            
+        }
+        
+        free(stack2);
+        /*while(!isEmpty(stack) && top(stack)->isTerminal == 1 && (top(stack)->element.terminal==EPSILON)){
             pop(stack);
-            currtoken = getNextToken(fileptr);
-            printToken(currtoken);
         }
 
+        while(!isEmpty(stack) && top(stack)->isTerminal == 1 && (currtoken->name != top(stack)->element.terminal))
+        {
+            printf("Error, skipping %s\n", currtoken->lexeme);
+            pop(stack);
+        }
+
+        while(!isEmpty(stack) && (top(stack)->isTerminal == 1) && (top(stack)->element.terminal == currtoken->name || top(stack)->element.terminal ==  EPSILON))
+        {
+            
+            TreeNode* t = top(stack);
+            pop(stack);
+            if(t->element.non_terminal != EPSILON)
+            {
+                printToken(currtoken);
+                currtoken = getNextToken(fileptr);   
+            }
+        }*/
+
+        while(!isEmpty(stack) && top(stack)->isTerminal==1){
+            if(top(stack)->element.terminal == EPSILON){
+                pop(stack);
+            }
+            
+            else if(top(stack)->element.terminal == currtoken->name){
+                printToken(currtoken);
+                currtoken = getNextToken(fileptr);
+                pop(stack);
+            }
+
+            else{
+                printf("Error: skipping %s\n", currtoken->lexeme);
+                pop(stack);
+            }
+        }
         // if it is non-terminal
         // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
     }
     if (currtoken != NULL) // currtoken == null)
     {
-        return root->headChild->element;
-        // successfully parsed
+        printf("Error\n");
+        return NULL;
     }
     else
     {
-        return NULL;
+        return prog->headChild->element;
+        // successfully parsed
     }
     // stack has been pushed and tree has been initialised
 }
@@ -613,8 +738,7 @@ void printGrammar(Grammar *G)
 {
 
     const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
-    };
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
     Rules **R = G->rules;
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
@@ -891,9 +1015,10 @@ SymbolNode *returnSymbolFromList(SymbolList *S, nonTerminal V)
     return NULL;
 }
 void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
-{   
+{
     F->table[(int)V]->inFollow = true;
-    if(F->table[(int)V]->followComputed){
+    if (F->table[(int)V]->followComputed)
+    {
         return;
     }
     ffSingleNode *V_singleNode = F->table[(int)V];
@@ -904,7 +1029,7 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
     {
         TokenListNode *temp = createTokenNode(DOLLAR);
         appendNodeSet(followSet, temp);
-        free(temp);
+        //free(temp);
         F->table[(int)program]->followComputed = true;
         return;
     }
@@ -938,11 +1063,12 @@ void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R)
     SymbolNode *temp_node = V_sym_node->next;
     if (temp_node == NULL)
     {
-        //computeFollow(G, F, R->non_terminal);
-        if(!F->table[R->non_terminal]->followComputed && !F->table[(int)R->non_terminal]->inFollow){
+        // computeFollow(G, F, R->non_terminal);
+        if (!F->table[R->non_terminal]->followComputed && !F->table[(int)R->non_terminal]->inFollow)
+        {
             computeFollow(G, F, R->non_terminal);
         }
-        TokenList * fs = F->table[R->non_terminal]->followSet;
+        TokenList *fs = F->table[R->non_terminal]->followSet;
         addSets(followSet, F->table[R->non_terminal]->followSet, false);
         return;
     }
@@ -1046,6 +1172,11 @@ void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
     Rules **allRules = G->rules;
     int noRules = G->numOfRules;
 
+    Rule * synRule;
+    synRule = allocRule(-1, -1);
+    SymbolNode *synNode = allocSymbol(SYN, true);
+    appendSymbolList(synRule->product, synNode);
+
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
 
@@ -1105,13 +1236,23 @@ void createParseTable(FirstAndFollow *F, Grammar *G, Table *T)
 
             rule = rule->next;
         }
+
+        //adding syn
+        TokenList * followSet = F->table[i]->followSet;
+        TokenListNode * head = followSet->head;
+
+        for(int j = 0; j<followSet->setSize; j++){
+            if(!T->check[i][head->name]){
+                T->table[i][head->name] = synRule;
+                T->check[i][head->name] = true;
+            }
+        }
     }
 }
 void printParseTable(Table *T)
 {
-    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
-    };
+    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR", "SYN"};
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
         for (int j = 0; j < NO_OF_TERMINALS; j++)
@@ -1151,9 +1292,8 @@ void printParseTable(Table *T)
 int main()
 {
 
-    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"
-};
+    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR", "SYN"};
+    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
     FILE *fp = fopen("modified_grammar.txt", "r");
     if (fp == NULL)
     {
@@ -1177,14 +1317,13 @@ int main()
     {
         nonTerminal V = i;
 
-       
         // TokenList *followSet = F->table[i]->followSet;
         // printf("start compute Follow\n");
         // TokenListNode *head = followSet->head;
 
         computeFollow(G, F, V);
         continue;
-        
+
         TokenList *followSet = F->table[i]->followSet;
         TokenListNode *head = followSet->head;
         printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
@@ -1197,26 +1336,18 @@ int main()
     }
     Table *T = allocParseTable();
     createParseTable(F, G, T);
+    //printParseTable(T);
 
     //---------------------
     initializations();
-    FILE *fileptr = fopen("testCaseFile.txt", "r");
+    FILE *fileptr = fopen("t6.txt", "r");
     if (fileptr == NULL)
     {
         printf("Error in operning \n");
         return 1;
     }
-    Token *currtoken;
-    while (true)
-    {
-        currtoken = getNextToken(fileptr);
-        if (currtoken->name == TK_COMMENT)
-        {
-            continue;
-        }
-        break;
-    }
-    createParseTree(fileptr, G, T, currtoken);
+
+    createParseTree(fileptr, G, T);
     // while (true)
     // {
     //     // printf("entered while\n");

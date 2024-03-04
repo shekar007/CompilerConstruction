@@ -70,13 +70,14 @@ typedef enum
     TK_NE,
     EPSILON,
     TK_ERROR,
-    DOLLAR
+    DOLLAR,
+    SYN
 } TokenName;
 
 typedef union
 {
-    long long num;
-    long double r_num;
+    int num;
+    float r_num;
 } Value;
 
 typedef struct token

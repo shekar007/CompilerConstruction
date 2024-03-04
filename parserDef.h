@@ -80,13 +80,18 @@ typedef union
     nonTerminal non_terminal;
 } symbolType;
 
+
 typedef struct symbolNode
 {
     symbolType type;
-    struct symbolNode *next;
-    struct symbolNode *prev; // modify prev
+    struct symbolNode *next;// modify prev
     bool isTerm;
 } SymbolNode;
+
+
+typedef struct {
+    SymbolNode* symTop;  // Rename stack* to symTop
+} SymStack;
 
 typedef struct symbolList
 {

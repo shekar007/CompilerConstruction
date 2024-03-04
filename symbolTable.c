@@ -29,6 +29,10 @@ int hashFunction(char *value, int no_entries)
         }
     }
 
+    if(hash<0){
+        hash = 0;
+    }
+
     return hash % no_entries;
 }
 

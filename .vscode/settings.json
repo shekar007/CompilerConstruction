@@ -6,6 +6,8 @@
     "symboltable.h": "c",
     "math.h": "c",
     "stdlib.h": "c",
-    "typeinfo": "c"
+    "typeinfo": "c",
+    "compare": "c",
+    "type_traits": "c"
   }
 }

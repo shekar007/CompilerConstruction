@@ -1372,11 +1372,11 @@ void printToken(Token *t)
     printf("------------------- \n");
     if (t->name == TK_NUM)
     {
-        printf("Value : %lld\n", t->value->num);
+        printf("Value : %d\n", t->value->num);
     }
     else if (t->name == TK_RNUM)
     {
-        printf("Value : %Lf\n", t->value->r_num);
+        printf("Value : %f\n", t->value->r_num);
     }
 
     printf("Token Type : %s\n", enumValues[t->name]);

@@ -951,7 +951,7 @@ TokenList *returnFirst(FirstAndFollow *F, Rule *R)
             epsFlag = false;
             break;
         }
-        addSets(rhsFirstSet, sets[(int)temp->type.non_terminal]->firstSet, true);
+        addSets(rhsFirstSet, F->table[(int)temp->type.non_terminal]->firstSet, true);
         ffSingleNode *tempNode = returnFFSingleNode(F, temp->type.non_terminal);
         TokenList *tempList = tempNode->firstSet;
         if (!tempList->containsEps)
@@ -1113,14 +1113,8 @@ int main()
     printf("start compute first\n"); 
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
     {
-        //printf("start compute first: %d\n", i);
-        if(i!=stmt){
-            continue;
-        }
         computeFirst(G, F, (nonTerminal)i);
-        if(i==stmt){
-        //    printf("%d", F->table[i]->firstSet->containsEps);
-        }
+
     }
     printf("end of compute first\n");
     for (int i = 0; i < NO_OF_NONTERMINALS; i++)

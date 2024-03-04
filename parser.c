@@ -604,19 +604,19 @@ void printGrammar(Grammar *G)
         }
     }
 }
-int main()
-{
-    FILE *fp = fopen("modified_grammar.txt", "r");
-    if (fp == NULL)
-    {
-        printf("failed to open file\n");
-    }
-    Grammar *G = generateGrammar(fp);
-    Table *T = allocParseTable();
-    FirstAndFollow *F;
+// int main()
+// {
+//     FILE *fp = fopen("modified_grammar.txt", "r");
+//     if (fp == NULL)
+//     {
+//         printf("failed to open file\n");
+//     }
+//     Grammar *G = generateGrammar(fp);
+//     Table *T = allocParseTable();
+//     FirstAndFollow *F;
 
-    printGrammar(G);
-}
+//     printGrammar(G);
+// }
 Grammar *allocGrammar()
 {
     Grammar *G = (Grammar *)malloc(sizeof(Grammar));
@@ -1055,30 +1055,30 @@ int main()
         printf("failed to open file\n");
     }
     Grammar *G = generateGrammar(fp);
-    // printGrammar(G);
+    printGrammar(G);
     // return 0;
     FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
     // F->table[(int)arithmeticExpression];
     // return 0;
 
-    allocSets(F);
+    // allocSets(F);
 
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
+    // for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    // {
 
-        nonTerminal V = i;
+    //     nonTerminal V = i;
 
-        TokenList *followSet = F->table[i]->followSet;
-        TokenListNode *head = followSet->head;
+    //     TokenList *followSet = F->table[i]->followSet;
+    //     TokenListNode *head = followSet->head;
 
-        computeFollow(G, F, V);
+    //     computeFollow(G, F, V);
 
-        printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
-        for (int i = 0; i < followSet->setSize; i++)
-        {
-            printf("%s, ", terminals[head->name]);
-            head = head->next;
-        }
-        printf("\n");
-    }
+    //     printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+    //     for (int i = 0; i < followSet->setSize; i++)
+    //     {
+    //         printf("%s, ", terminals[head->name]);
+    //         head = head->next;
+    //     }
+    //     printf("\n");
+    // }
 }

@@ -25,7 +25,7 @@ void resetTailSet(TokenList *L);
 void addSets(TokenList *set1, TokenList *set2, bool isFollowSet);
 ffSingleNode *findFFSymbolNode(FirstAndFollow *F, nonTerminal V);
 TokenListNode *createTokenNode(TokenName name);
-void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V, ffSingleNode *node);
+void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V);
 void createParseTable(FirstAndFollow *F, Grammar *G, Table *T);
 void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R);
 // parseTree *parseInputSourceCode(char *testcaseFile, Table T);

@@ -56,21 +56,20 @@ void printTokens(FILE *codeFile)
     }
 }
 
-int main()
+int main(int argc, char * argv[])
 {
-    // if (argc != 3)
-    // {
-    //    printf("supply 2 files\n");
-    //    return 0;
-    // }
+    if (argc != 3)
+    {
+       printf("supply 2 files\n");
+       return 0;
+    }
     
     int i;
+
     while (true)
     {
         printf("Enter 1, 2, 3 or 0(quit)\n");
         scanf(" %d", &i);
-        FILE *codeFile = fopen("t3.txt", "r");
-        FILE *parseTreeOutFile = fopen("parsetreeout.txt", "w");
 
         if (i == 0)
         {
@@ -79,31 +78,53 @@ int main()
         }
         if (i == 1)
         {
+            FILE *codeFile = fopen(argv[1], "r");
+            
             printCommentFreeCode(codeFile);
+            
+            fclose(codeFile);
         }
         if (i == 2)
         {
+            FILE *codeFile = fopen(argv[1], "r");
+
             initializations();
             printTokens(codeFile);
+
+            fclose(codeFile);
         }
         if (i == 3)
         {
+            FILE *codeFile = fopen(argv[1], "r");
+            FILE *parseTreeOutFile = fopen(argv[2], "w");
+
             callParser(codeFile, parseTreeOutFile); // which indirectly calls lexer
+
+            fclose(codeFile);
+            fclose(parseTreeOutFile);
         }
         if (i == 4)
         {
+
             clock_t start_time, end_time;
             double total_CPU_time, total_CPU_time_in_seconds;
             start_time = clock();
+
+            FILE *codeFile = fopen(argv[1], "r");
+            FILE *parseTreeOutFile = fopen(argv[2], "w");
+
             callParser(codeFile, parseTreeOutFile);
+
+            fclose(codeFile);
+            fclose(parseTreeOutFile);
+            
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
             printf("total_CPU_time: %lf\n", total_CPU_time);
             printf("total_CPU_time_in_seconds: %lf\n", total_CPU_time_in_seconds);
-        }
 
-        fclose(codeFile);
-        fclose(parseTreeOutFile);
+            
+        }
     }
 }

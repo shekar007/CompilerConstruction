@@ -25,7 +25,7 @@
 
 twinBuffer *buffer;
 symTable *symbolTable;
-bool bufferChoice = 0;
+bool bufferChoice = 1;
 int flagdr = 0;
 int getstreamnull = 0;
 int fwdptr = 0;
@@ -204,7 +204,7 @@ Token *getNextToken(FILE *fileptr)
     }
     printBuffer(currentBuffer(buffer));
     int state = 0;
-    char *lexeme = (char *)malloc(sizeof(char) * 50);
+    char *lexeme = (char *)malloc(sizeof(char) * 100);
     memset(lexeme, '\0', 50);
     int lex_ptr = 0;
     varlength = 0;
@@ -226,6 +226,7 @@ Token *getNextToken(FILE *fileptr)
             {
                 return NULL;
             }
+
             else if (currentBuffer(buffer)[fwdptr] == ' ' || currentBuffer(buffer)[fwdptr] == '\t')
             {
                 state = 0;
@@ -699,7 +700,7 @@ return token;
             token->lexeme = lexeme;
             token->name = TK_AND;
             token->lineno = lineno;
-return token;
+            return token;
         }
         case 27:
         {
@@ -710,7 +711,7 @@ return token;
             {
                 fileptr = refillBuffer(&fwdptr, fileptr);
                 char ch = currentBuffer(buffer)[fwdptr];
-                printBuffer(currentBuffer(buffer));
+                //printBuffer(currentBuffer(buffer));
                 if (ch == '\n')
                 {
                     lineno++;
@@ -1427,8 +1428,26 @@ void printToken(Token *t)
 void initializations()
 {
     // Allocate memory for buffers
+    bufferChoice = 1;
+    flagdr = 0;
+    getstreamnull = 0;
+    fwdptr = 0;
+    varlength = 0;
+    lineno = 1;
+    funidlength = 0;
+
     symbolTable = createEmptyTable(50);
     addKeywords(symbolTable);
+
+    if(buffer!=NULL){
+        if(buffer->buffer1!=NULL){
+            free(buffer->buffer1);
+        }
+        if(buffer->buffer2!=NULL){
+            free(buffer->buffer2);
+        }
+        free(buffer);
+    }
 
     buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
     buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
@@ -1446,6 +1465,9 @@ void initializations()
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+
+    getstreamnull = 0;
+    lineno = 1;
 
 }
 // @chandu & @aadit. first of all good morning

@@ -1,4 +1,3 @@
-
 %Test Case 3: Syntactically correct testcase
 %Following program computes the average marks obtained by students in three subjects
 

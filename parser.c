@@ -518,6 +518,7 @@ SymbolNode *allocSymbol(int enumIndex, bool isTerm)
     }
     S->type = T;
     S->isTerm = isTerm;
+    S->next = NULL;
     return S;
 }
 void appendRuleGrammar(Grammar *G, nonTerminal V, Rule *R)
@@ -568,6 +569,16 @@ void allocSets(FirstAndFollow *F)
         F->table[i]->followComputed = false;
         F->table[i]->inFollow = false;
     }
+}
+
+void deallocSets(FirstAndFollow *F)
+{
+    //F->table = (ffSingleNode **)malloc(NO_OF_NONTERMINALS * sizeof(ffSingleNode *));
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        free(F->table[i]);
+    }
+    free(F->table);
 }
 void appendNodeSet(TokenList *L, TokenListNode *node)
 {
@@ -725,7 +736,7 @@ void computeFollow(Grammar *G, FirstAndFollow *F, nonTerminal V)
     {
         TokenListNode *temp = createTokenNode(DOLLAR);
         appendNodeSet(followSet, temp);
-        //free(temp);
+        free(temp);
         F->table[(int)program]->followComputed = true;
         return;
     }
@@ -1272,16 +1283,11 @@ TreeNode *callParser(FILE *codeFile, FILE *parseTreeOutFile)
 
     TreeNode * root = createParseTree(fileptr, G, T);
 
-    FILE *file = fopen("example.txt", "w");
-    if (file == NULL) {
-        perror("Failed to open file");
-        return NULL;
-    }
-
     int i = 0;
-    printParseTree(root, file, &i);
+    printParseTree(root, parseTreeOutFile, &i);
 
-    fclose(fileptr);
+    deallocSets(F);
+    free(F);
 
     return root;
     // Allocate memory for buffers

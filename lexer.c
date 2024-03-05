@@ -1435,11 +1435,13 @@ void initializations()
     if (buffer->buffer1 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
+        return;
     }
     buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
     if (buffer->buffer2 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
+        return;
         // Exit with failure status
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
@@ -1451,7 +1453,7 @@ void initializations()
 //please put any other other required for their invocation in here.
 //codeFile has been given "r" permissions in driver.
 //callLexer will return symTable* which will be used to print in option 2 of driver.
-void callLexer(FILE *codeFile)
+/*void callLexer(FILE *codeFile)
 {
 
     // Allocate memory for buffers
@@ -1463,37 +1465,16 @@ void callLexer(FILE *codeFile)
     if (buffer->buffer1 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
-        return NULL; // Exit with failure status
+        return; // Exit with failure status
     }
     buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
     if (buffer->buffer2 == NULL)
     {
         fprintf(stderr, "Memory allocation failed for buffer1\n");
-        return NULL; // Exit with failure status
+        return ; // Exit with failure status
     }
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
-    FILE *fileptr = codeFile;  
-    if (fileptr == NULL)
-    {
-        printf("Error in operning \n");
-        return NULL;
-    }
-    while (true)
-    {
-        // printf("entered while\n");
-        Token *tokenReturned = getNextToken(fileptr);
-        if (tokenReturned == NULL)
-        {
-            break;
-        }
-        else
-        {
-            printToken(tokenReturned);
-        }
-    }
 
-    fclose(fileptr);
-
-    return symbolTable;
 }
+*/

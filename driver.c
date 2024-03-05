@@ -49,24 +49,28 @@ void printTokens(FILE *codeFile)
             printf("\nLine.%d", temp->lineno);
             cur_lineno = temp->lineno;
         }
+        if(temp->name == TK_COMMENT){
+            continue;
+        }
         printf("\t%s %s\n", terminals[temp->name], temp->lexeme);
     }
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    if (argc != 3)
-    {
-        printf("supply 2 files\n");
-        return 0;
-    }
-    FILE *codeFile = fopen(argv[1], "r");
-    FILE *parseTreeOutFile = fopen(argv[2], "rw");
+    // if (argc != 3)
+    // {
+    //    printf("supply 2 files\n");
+    //    return 0;
+    // }
+    
     int i;
     while (true)
     {
         printf("Enter 1, 2, 3 or 0(quit)\n");
         scanf(" %d", &i);
+        FILE *codeFile = fopen("t3.txt", "r");
+        FILE *parseTreeOutFile = fopen("parsetreeout.txt", "w");
 
         if (i == 0)
         {
@@ -79,6 +83,7 @@ int main(int argc, char *argv[])
         }
         if (i == 2)
         {
+            initializations();
             printTokens(codeFile);
         }
         if (i == 3)
@@ -94,8 +99,11 @@ int main(int argc, char *argv[])
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
-            printf("total_CPU_time:%lf", total_CPU_time);
-            printf("total_CPU_time_in_seconds:%lf", total_CPU_time_in_seconds);
+            printf("total_CPU_time: %lf\n", total_CPU_time);
+            printf("total_CPU_time_in_seconds: %lf\n", total_CPU_time_in_seconds);
         }
+
+        fclose(codeFile);
+        fclose(parseTreeOutFile);
     }
 }

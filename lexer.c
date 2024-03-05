@@ -30,7 +30,7 @@ int flagdr = 0;
 int getstreamnull = 0;
 int fwdptr = 0;
 int varlength = 0;
-int lineno = 0;
+int lineno = 1;
 int funidlength = 0;
 bool isnum(char c)
 {
@@ -224,9 +224,7 @@ Token *getNextToken(FILE *fileptr)
             char ch = currentBuffer(buffer)[fwdptr];
             if (fileptr == NULL)
             {
-                // state 60
-                // print something and null;
-                state = 60;
+                return NULL;
             }
             else if (currentBuffer(buffer)[fwdptr] == ' ' || currentBuffer(buffer)[fwdptr] == '\t')
             {
@@ -417,7 +415,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_CL;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 2:
@@ -426,7 +425,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_COMMA;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 3:
@@ -435,7 +435,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_SEM;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 4:
@@ -444,7 +445,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_SQR;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 5:
@@ -453,7 +455,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_COLON;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 6:
@@ -462,7 +465,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_OP;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 7:
@@ -471,7 +475,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_DOT;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 8:
@@ -480,7 +485,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_SQL;
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
         case 9:
@@ -505,7 +511,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_NE;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 11:
         {
@@ -513,7 +520,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_PLUS;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 12:
         {
@@ -521,7 +529,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_MINUS;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 13:
         {
@@ -529,7 +538,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_MUL;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 14:
         {
@@ -537,7 +547,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_NOT;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 15:
         {
@@ -545,7 +556,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_DIV;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 16:
         {
@@ -570,7 +582,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_EQ;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 18:
         {
@@ -592,7 +605,8 @@ Token *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_GT;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 20:
         {
@@ -600,7 +614,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_GE;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 21:
         {
@@ -641,7 +656,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_OR;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 24:
         {
@@ -682,7 +698,8 @@ Token *getNextToken(FILE *fileptr)
             lex_ptr++;
             token->lexeme = lexeme;
             token->name = TK_AND;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 27:
         {
@@ -697,20 +714,24 @@ Token *getNextToken(FILE *fileptr)
                 if (ch == '\n')
                 {
                     lineno++;
+                    fwdptr++;
                     break;
                 }
                 else if (ch == -1)
                 {
+                    fwdptr++;
                     break;
                 }
                 else if (ch == '\0')
                 {
+                    fwdptr++;
                     break;
                 }
                 fwdptr++;
 
             } while (true);
-            return token;
+            token->lineno = lineno;
+return token;
             break;
         }
 
@@ -748,7 +769,8 @@ Token *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_LT;
-            return token;
+            token->lineno = lineno;
+return token;
         }
 
         case 30:
@@ -788,7 +810,8 @@ Token *getNextToken(FILE *fileptr)
                     }
                 }
                 flagdr = 1;
-                return token;
+                token->lineno = lineno;
+return token;
             }
             break;
         }
@@ -797,7 +820,8 @@ Token *getNextToken(FILE *fileptr)
         {
             token->lexeme = lexeme;
             token->name = TK_LT;
-            return token;
+            token->lineno = lineno;
+return token;
         }
 
         case 32:
@@ -830,7 +854,8 @@ Token *getNextToken(FILE *fileptr)
             lexeme[lex_ptr] = '-';
             token->lexeme = lexeme;
             token->name = TK_ASSIGNOP;
-            return token;
+            token->lineno = lineno;
+return token;
         }
 
         case 34:
@@ -838,7 +863,8 @@ Token *getNextToken(FILE *fileptr)
             lexeme[lex_ptr] = '=';
             token->lexeme = lexeme;
             token->name = TK_LE;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 35:
         {
@@ -888,12 +914,14 @@ Token *getNextToken(FILE *fileptr)
             if (n->is_present)
             {
                 token->name = n->node->tokentype;
-                return token;
+                token->lineno = lineno;
+return token;
             }
             else
             {
                 addSymbol(symbolTable, token, lineno);
-                return token;
+                token->lineno = lineno;
+return token;
             }
             break;
         }
@@ -929,7 +957,8 @@ Token *getNextToken(FILE *fileptr)
 
             token->value->num = atoi(lexeme);
             token->isint = 1;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 40:
         {
@@ -974,7 +1003,8 @@ Token *getNextToken(FILE *fileptr)
                 }
             }
             flagdr = 1;
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 42:
         {
@@ -1021,7 +1051,8 @@ Token *getNextToken(FILE *fileptr)
             token->value = (Value *)malloc(sizeof(Value));
             token->value->r_num = strtof(lexeme, NULL);
             token->isint = 0;
-            return token;
+            token->lineno = lineno;
+return token;
             // note
         }
         case 45:
@@ -1093,7 +1124,8 @@ Token *getNextToken(FILE *fileptr)
             token->value = (Value *)malloc(sizeof(Value));
 
             token->value->r_num = strtof(lexeme, NULL);
-            return token;
+            token->lineno = lineno;
+return token;
         }
         case 49:
         {
@@ -1179,12 +1211,14 @@ Token *getNextToken(FILE *fileptr)
                 if (n->is_present)
                 {
                     token->name = n->node->tokentype;
-                    return token;
+                    token->lineno = lineno;
+return token;
                 }
                 else
                 {
                     addSymbol(symbolTable, token, lineno);
-                    return token;
+                    token->lineno = lineno;
+return token;
                 }
             }
             break;
@@ -1268,13 +1302,16 @@ Token *getNextToken(FILE *fileptr)
                 if (n->is_present)
                 {
                     token->name = n->node->tokentype;
+                    token->lineno = lineno;
                     return token;
                 }
                 else
                 {
                     addSymbol(symbolTable, token, lineno);
+                    token->lineno = lineno;
                     return token;
                 }
+                token->lineno = lineno;
                 return token;
             }
             else
@@ -1313,12 +1350,14 @@ Token *getNextToken(FILE *fileptr)
             if (n->is_present)
             {
                 token->name = n->node->tokentype;
-                return token;
+                token->lineno = lineno;
+return token;
             }
             else
             {
                 addSymbol(symbolTable, token, lineno);
-                return token;
+                token->lineno = lineno;
+return token;
             }
             break;
         }
@@ -1381,6 +1420,7 @@ void printToken(Token *t)
 
     printf("Token Type : %s\n", enumValues[t->name]);
     printf("Lexeme : %s\n", t->lexeme);
+    printf("Line number : %d\n", lineno);
     printf("------------------- \n");
 }
 // int main()

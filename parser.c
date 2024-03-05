@@ -8,318 +8,14 @@
 #include "parserDef.h"
 #include "lexer.h"
 #include "symbolTable.h"
+#include "stack.h"
+#include "stackDef.h"
 #define LINE_SIZE 200 * sizeof(char)
 
+const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR", "SYN"};
+const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
 
 
-
-
-// Function to initialize an empty stack
-SymStack * createSymStack() {
-    SymStack * temp = (SymStack *) malloc(sizeof(SymStack));
-    temp->symTop = NULL;
-    return temp;
-}
-
-// Function to check if the stack is empty
-bool isSymStackEmpty(SymStack* stack) {
-    return (stack->symTop == NULL);
-}
-
-// Function to push a symbol onto the stack
-void pushSymbol(SymStack* stack, symbolType type, bool isTerm) {
-    SymbolNode* newNode = (SymbolNode*)malloc(sizeof(SymbolNode));
-    if (newNode == NULL) {
-        printf("Memory allocation failed.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    newNode->type = type;
-    newNode->isTerm = isTerm;
-    newNode->next = stack->symTop;
-    stack->symTop = newNode;
-}
-
-// Function to pop a symbol from the stack
-void popSymbol(SymStack* stack) {
-    if (isSymStackEmpty(stack)) {
-        printf("Error: Stack underflow.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    SymbolNode* temp = stack->symTop;
-    stack->symTop = temp->next;
-
-    // Free the memory of the popped node
-    //free(temp);
-}
-
-// Function to get the top symbol without popping it
-SymbolNode* symTop(SymStack* stack) {
-    return stack->symTop;
-}
-
-// Function to free the memory used by the stack
-void freeSymStackMemory(SymStack* stack) {
-    while (!isSymStackEmpty(stack)) {
-        popSymbol(stack);
-    }
-}
-
-Stack *createStack()
-{
-    Stack *stack = (Stack *)malloc(sizeof(Stack));
-    if (stack == NULL)
-    {
-        printf("Memory allocation failed\n");
-        exit(1);
-    }
-    stack->top = NULL;
-    return stack;
-}
-int isEmpty(Stack *stack)
-{
-    return (stack->top == NULL);
-}
-void push(Stack *stack, TreeNode *element)
-{
-    stackNode *newNode = (stackNode *)malloc(sizeof(stackNode));
-    if (newNode == NULL)
-    {
-        printf("Memory allocation failed\n");
-        exit(1);
-    }
-    newNode->stackEle = element;
-    newNode->next = stack->top;
-    stack->top = newNode;
-}
-
-void pop(Stack *stack)
-{
-    if (isEmpty(stack))
-    {
-        printf("Stack underflow\n");
-        exit(1);
-    }
-    stackNode *temp = stack->top;
-    //TreeNode *data = temp->stackEle;
-    stack->top = temp->next;
-    //free(temp);
-    //free(data);
-}
-TreeNode *top(Stack *stack)
-{
-    if (isEmpty(stack))
-    {
-        printf("Stack is empty\n");
-        exit(1);
-    }
-    return stack->top->stackEle;
-}
-void pushIntoStack(SymStack *stack, SymbolList *list)
-{
-    SymbolNode * head = list->head;
-
-    while(head!=NULL){
-        pushSymbol(stack, head->type, head->isTerm);
-        head = head->next;
-    }
-}
-TreeNode *createParseTree(FILE *fileptr, Grammar *grammar, Table *T)
-{
-    // pass length of tokenarray and variable = tokenArrayLength
-    
-    Stack *stack = createStack();
-    
-    TreeNode *prog = (TreeNode *)malloc(sizeof(TreeNode));
-    
-    prog->isTerminal = 0;
-    prog->element.non_terminal = program;
-    prog->noChild = 0;
-    prog->headChild = NULL;
-    push(stack, prog);
-    int tokenptr = 0;
-    int stringptr = 0;
-
-    Token * currtoken = getNextToken(fileptr);
-
-    while (!isEmpty(stack))
-    {
-        
-        // if currenttoken  == NULL
-        while (currtoken->name == TK_ERROR)
-        {
-            // error note
-            printToken(currtoken);
-            currtoken = getNextToken(fileptr);
-        }
-
-        if(currtoken == NULL){
-            printf("Error");
-            TreeNode * x = top(stack);
-            if(x->isTerminal)
-            {
-                printf("%d", x->element.terminal);
-            }
-            else
-            {
-                printf("%d", x->element.non_terminal);
-            }
-        }
-        if (currtoken->name == TK_COMMENT)
-        {
-            while (true)
-            {
-                currtoken = getNextToken(fileptr);
-                if (currtoken == NULL)
-                {
-                    // PROBLEM HO SAKTI IF LAST LINE IS COMMENT
-                    return NULL;
-                }
-                if (currtoken->name != TK_COMMENT)
-                {
-                    break;
-                }
-            }
-        }
-        // first step me kya hoga
-        TreeNode *x = top(stack);
-        pop(stack);
-
-        TreeNode **n = &(x);
-        /*
-        change in parse tree when popping
-        */
-
-        Rule *r = T->table[x->element.non_terminal][currtoken->name];
-        while (r == NULL)
-        {
-            printf("Error: skipping %s\n", currtoken->lexeme);
-            currtoken = getNextToken(fileptr);
-            r = T->table[x->element.non_terminal][currtoken->name];
-        }
-
-        if(r->product->head->isTerm && r->product->head->type.terminal==SYN){
-            printf("Error at line no: skipping non terminal %d\n", x->element.non_terminal);
-            continue;
-        }
-
-        SymbolList *rhsList = r->product;
-
-        SymStack *stack2 = createSymStack();
-        pushIntoStack(stack2, rhsList);
-        
-        
-        SymbolNode *ptr;
-        LLNode *headptr;
-        while (!isSymStackEmpty(stack2))
-        {
-            ptr = symTop(stack2);
-            popSymbol(stack2);
-
-            TreeNode *ele;
-            allocTreeNode(&ele);
-            // memory for ele
-            
-            if (ptr->isTerm)
-            {
-                ele->element.terminal = ptr->type.terminal;
-                ele->isTerminal = 1;
-            }
-            else
-            {
-                ele->element.non_terminal = ptr->type.non_terminal;
-                ele->isTerminal = 0;
-            }
-
-            ele->noChild = 0;
-            ele->headChild = NULL;
-           
-           
-            (*n)->noChild++;
-            push(stack, ele);
-
-            if ((*n)->headChild == NULL)
-            {
-                (*n)->headChild = (LLNode *)malloc(sizeof(LLNode));
-                (*n)->isTerminal = 0;
-                (*n)->headChild->element = ele;
-                headptr = (*n)->headChild;
-            }
-            else
-            {
-                headptr->next = (LLNode *)malloc(sizeof(LLNode));
-                headptr->next->element = ele;
-                headptr = headptr->next;
-
-            }
-            //ptr = ptr->prev;
-            free(ptr);
-            
-        }
-        
-        free(stack2);
-        /*while(!isEmpty(stack) && top(stack)->isTerminal == 1 && (top(stack)->element.terminal==EPSILON)){
-            pop(stack);
-        }
-
-        while(!isEmpty(stack) && top(stack)->isTerminal == 1 && (currtoken->name != top(stack)->element.terminal))
-        {
-            printf("Error, skipping %s\n", currtoken->lexeme);
-            pop(stack);
-        }
-
-        while(!isEmpty(stack) && (top(stack)->isTerminal == 1) && (top(stack)->element.terminal == currtoken->name || top(stack)->element.terminal ==  EPSILON))
-        {
-            
-            TreeNode* t = top(stack);
-            pop(stack);
-            if(t->element.non_terminal != EPSILON)
-            {
-                printToken(currtoken);
-                currtoken = getNextToken(fileptr);   
-            }
-        }*/
-
-        while(!isEmpty(stack) && top(stack)->isTerminal==1){
-            if(top(stack)->element.terminal == EPSILON){
-                pop(stack);
-            }
-            
-            else if(top(stack)->element.terminal == currtoken->name){
-                printToken(currtoken);
-                currtoken = getNextToken(fileptr);
-                pop(stack);
-            }
-
-            else{
-                printf("Error: skipping %s\n", currtoken->lexeme);
-                pop(stack);
-            }
-        }
-        // if it is non-terminal
-        // int noRules = grammar->rules[n->element->non_terminal]->numVariableProductions;
-    }
-    if (currtoken != NULL) // currtoken == null)
-    {
-        printf("Error\n");
-        return NULL;
-    }
-    else
-    {
-        return prog->headChild->element;
-        // successfully parsed
-    }
-    // stack has been pushed and tree has been initialised
-}
-void allocTreeNode(TreeNode **root)
-{
-    (*root) = (TreeNode *)malloc(sizeof(TreeNode));
-    (*root)->element.non_terminal = 0;
-    (*root)->noChild = 0;
-    (*root)->isTerminal = 1;
-    (*root)->headChild = (LLNode *)malloc(sizeof(LLNode));
-}
 TokenName stringToTokenName(char *str)
 {
     if (strcmp(str, "TK_ASSIGNOP") == 0)
@@ -1262,7 +958,10 @@ void printParseTable(Table *T)
             if (r)
             {
                 printf("%s %s:   ", non_terminals[i], terminals[j]);
-
+                if(r->product->head->isTerm && r->product->head->type.terminal==SYN){
+                    printf("%s %s --> SYN\n", non_terminals[i], terminals[j]);
+                    continue;
+                }
                 printf("%s --> ", non_terminals[r->non_terminal]);
                 SymbolNode *n;
                 n = r->product->head;
@@ -1289,11 +988,231 @@ void printParseTable(Table *T)
         }
     }
 }
+
+Token *getNextTokenHelper(FILE *fileptr)
+{
+    Token *t;
+    while (true)
+    {
+        t = getNextToken(fileptr);
+
+        if(t==NULL){
+            return NULL;
+        }
+        if (t->name == TK_ERROR)
+        {
+            continue;
+        }
+        else if (t->name == TK_COMMENT)
+        {
+            continue;
+        }
+        else
+        {
+            return t;
+        }
+    }
+}
+
+TreeNodeList * allocTreeNodeList(){
+    TreeNodeList * temp = (TreeNodeList *) malloc(sizeof(TreeNodeList));
+    temp->head = NULL;
+    temp->size = 0;
+    return temp;
+}
+
+void appendToChildren(TreeNode * parent, TreeNode * child){
+    child->next = parent->childList->head;
+    parent->childList->head = child;
+}
+
+//push symbols to stack and append to children of parent
+void pushSymbols(Stack * S, SymbolList * set, TreeNode * parent){
+    Stack * sTemp = (Stack *) malloc(sizeof(Stack));
+
+    SymbolNode * temp = set->head;
+    TreeNode * tn;
+    for(int i = 0; i<set->productionLength; i++){
+        tn = (TreeNode*) malloc(sizeof(TreeNode));
+        tn->isTerm = temp->isTerm;
+        tn->value = temp->type;
+        push(sTemp, tn);
+        temp = temp->next;
+    }
+
+    while(!isEmpty(sTemp)){
+        TreeNode * tn = top(sTemp);
+        tn->parentNode = parent;
+        appendToChildren(parent, tn);
+        pop(sTemp);
+        push(S, tn);
+    }
+
+    free(sTemp);
+}
+
+TreeNode * createParseTree(FILE* fileptr, Grammar * G, Table * T){
+
+    TreeNode * root = (TreeNode *) malloc(sizeof(TreeNode));
+
+    root->next = NULL;
+    root->value.non_terminal = program;
+    root->isTerm = false;
+
+    root->childList = allocTreeNodeList();
+
+    Stack * S = (Stack *) malloc(sizeof(Stack));
+
+    TreeNode * curr;
+    push(S, root);
+
+    Token* currToken = getNextTokenHelper(fileptr);
+    while(!isEmpty(S)){
+        if(!top(S)->isTerm){
+            curr = top(S);
+            pop(S);
+
+            if(currToken==NULL){
+                printf("EOF reached with non empty stack\n");
+                return NULL;
+            }
+            curr->childList = allocTreeNodeList();
+            Rule * nextRule = T->table[curr->value.non_terminal][currToken->name];
+
+            while(nextRule==NULL){
+                printf("Error: skipping token %s", currToken->lexeme);
+                printToken(currToken);
+                currToken = getNextTokenHelper(fileptr);
+                if(currToken==NULL){
+                    printf("EOF reached with non empty stack\n");
+                    return NULL;
+                }
+                nextRule = T->table[curr->value.non_terminal][currToken->name];
+            }
+
+            if(nextRule->product->head->isTerm && nextRule->product->head->type.terminal==SYN){
+                printf("Error: popping %d from stack, current token %s\n", curr->value.non_terminal, currToken->lexeme);
+                printToken(currToken);
+                continue;
+            }
+
+            curr->lineno = currToken->lineno;
+
+            pushSymbols(S, nextRule->product, curr);
+        }
+
+        while(!isEmpty(S) && top(S)->isTerm){
+            
+            if(currToken==NULL){
+                printf("EOF reached with non empty stack\n");
+                return NULL;
+            }
+
+            if(top(S)->value.terminal==currToken->name){
+                //printToken(currToken);
+
+                top(S)->lexeme = currToken->lexeme;
+                top(S)->lineno = currToken->lineno;
+                if(currToken->isint){
+                    top(S)->num.num = currToken->value->num;
+                }
+                else if(currToken->name == TK_RNUM){
+                    top(S)->num.r_num = currToken->value->r_num;
+                }
+                currToken = getNextTokenHelper(fileptr);
+                pop(S);
+            }
+            else if(top(S)->value.terminal == EPSILON){
+                top(S)->lineno = currToken->lineno;
+                pop(S);
+            }
+            else{
+                printf("Error, popping %d froms stack, current lexeme is %s\n", top(S)->value.terminal, currToken->lexeme);
+                printToken(currToken);
+                pop(S);
+            }
+        }
+    }
+
+    if(currToken!=NULL){
+        printf("End of stack but not eof\n");
+    }
+    else{
+        printf("Parse tree generated\n");
+    }
+
+    return root;
+}
+
+void printParseTree(TreeNode * PT, FILE * fileptr, int * i){
+
+    if(PT==NULL){
+        return;
+    }
+
+    if(!PT->isTerm){
+        printParseTree(PT->childList->head, fileptr, i);
+    }
+
+    fprintf(fileptr, "\n---------------------------------------------------------------------------------------\n");
+
+    if(!PT->isTerm){
+        fprintf(fileptr, "---  ");
+    }
+    else{
+        fprintf(fileptr, "%s  ", PT->lexeme);
+    }
+
+    fprintf(fileptr, "Node no. %d  ", *i);
+    fprintf(fileptr, "%d  ", PT->lineno);
+    
+    if(!PT->isTerm){
+        fprintf(fileptr, "%s  ", non_terminals[PT->value.non_terminal]);
+    }
+    else{
+        fprintf(fileptr, "%s  ", terminals[PT->value.terminal]);
+    }
+
+    if(PT->isTerm){
+        if(PT->value.terminal == TK_NUM){
+            fprintf(fileptr, "%d  ", PT->num.num);
+        }
+        else if(PT->value.non_terminal == TK_RNUM){
+            fprintf(fileptr, "%f ", PT->num.r_num);
+        }
+    }
+
+    if(!PT->isTerm && PT->value.non_terminal == program){
+        fprintf(fileptr, "ROOT  ");
+    }
+    else{
+        fprintf(fileptr, "%s  ", non_terminals[PT->parentNode->value.non_terminal]);
+    }
+
+    if(!PT->isTerm){
+        fprintf(fileptr, "no  ");
+        fprintf(fileptr, "%s ", non_terminals[PT->value.non_terminal]);
+    }
+    else{
+        fprintf(fileptr, "yes  ");
+    }
+    fprintf(fileptr, "\n");
+    (*i)++;
+
+    if(!PT->isTerm){
+        TreeNode * temp = PT->childList->head->next;
+
+        while(temp!=NULL){
+            printParseTree(temp, fileptr, i);
+            temp = temp->next;
+        }
+    }
+}
+
+
 int main()
 {
 
-    const char *terminals[] = {"TK_ASSIGNOP", "TK_COMMENT", "TK_FIELDID", "TK_ID", "TK_NUM", "TK_RNUM", "TK_FUNID", "TK_RUID", "TK_WITH", "TK_PARAMETERS", "TK_END", "TK_WHILE", "TK_UNION", "TK_ENDUNION", "TK_DEFINETYPE", "TK_AS", "TK_TYPE", "TK_MAIN", "TK_GLOBAL", "TK_PARAMETER", "TK_LIST", "TK_SQL", "TK_SQR", "TK_INPUT", "TK_OUTPUT", "TK_INT", "TK_REAL", "TK_COMMA", "TK_SEM", "TK_COLON", "TK_DOT", "TK_ENDWHILE", "TK_OP", "TK_CL", "TK_IF", "TK_THEN", "TK_ENDIF", "TK_READ", "TK_WRITE", "TK_RETURN", "TK_PLUS", "TK_MINUS", "TK_MUL", "TK_DIV", "TK_CALL", "TK_RECORD", "TK_ENDRECORD", "TK_ELSE", "TK_AND", "TK_OR", "TK_NOT", "TK_LT", "TK_LE", "TK_EQ", "TK_GT", "TK_GE", "TK_NE", "EPSILON", "TK_ERROR", "DOLLAR", "SYN"};
-    const char *non_terminals[] = {"program", "mainFunction", "otherFunctions", "function", "input_par", "output_par", "parameter_list", "dataType", "primitiveDatatype", "constructedDatatype", "remaining_list", "stmts", "typeDefinitions", "actualOrRedefined", "typeDefinition", "fieldDefinitions", "fieldDefinition", "fieldType", "moreFields", "declarations", "declaration", "global_or_not", "otherStmts", "stmt", "assignmentStmt", "singleOrRecId", "option_single_constructed", "oneExpansion", "moreExpansions", "funCallStmt", "outputParameters", "inputParameters", "iterativeStmt", "conditionalStmt", "elsePart", "ioStmt", "arithmeticExpression", "expPrime", "term", "termPrime", "factor", "highPrecedenceOperators", "lowPrecedenceOperators", "booleanExpression", "var", "logicalOp", "relationalOp", "returnStmt", "optionalReturn", "idList", "more_ids", "definetypestmt", "A"};
     FILE *fp = fopen("modified_grammar.txt", "r");
     if (fp == NULL)
     {
@@ -1340,28 +1259,23 @@ int main()
 
     //---------------------
     initializations();
-    FILE *fileptr = fopen("t6.txt", "r");
+    FILE *fileptr = fopen("t2.txt", "r");
     if (fileptr == NULL)
     {
-        printf("Error in operning \n");
+        printf("Error in opening \n");
         return 1;
     }
 
-    createParseTree(fileptr, G, T);
-    // while (true)
-    // {
-    //     // printf("entered while\n");
-    //     Token *tokenReturned = getNextToken(fileptr);
-    //     if (tokenReturned == NULL)
-    //     {
-    //         break;
-    //     }
-    //     else
-    //     {
-    //         counter++;
-    //         printToken(tokenReturned);
-    //     }
-    // }
+    TreeNode * root = createParseTree(fileptr, G, T);
+
+    FILE *file = fopen("example.txt", "w");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    int i = 0;
+    printParseTree(root, file, &i);
 
     fclose(fileptr);
 

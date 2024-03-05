@@ -88,11 +88,6 @@ typedef struct symbolNode
     bool isTerm;
 } SymbolNode;
 
-
-typedef struct {
-    SymbolNode* symTop;  // Rename stack* to symTop
-} SymStack;
-
 typedef struct symbolList
 {
     SymbolNode *head;
@@ -163,30 +158,23 @@ typedef struct table // parse table
 } Table;
 
 typedef struct TreeNode TreeNode;
-typedef struct childElement childElement;
-
-typedef struct LLNode
-{
-    TreeNode *element;
-    struct LLNode *next;
-} LLNode;
+typedef struct TreeNodeList TreeNodeList;
 
 struct TreeNode
 {
-    symbolType element;
-    LLNode *headChild;
-    int isTerminal;
-    int noChild;
+    TreeNodeList * childList;
+    TreeNode * next;
+    symbolType value;
+    Value num;
+    char * lexeme;
+    bool isTerm;
+    int lineno;
+    TreeNode * parentNode;
 };
 
-typedef struct stackNode
-{
-    TreeNode *stackEle;
-    struct stackNode *next;
-} stackNode;
-typedef struct Stack
-{
-    stackNode *top;
-} Stack;
+struct TreeNodeList{
+    TreeNode * head;
+    int size;
+};
 
 #endif

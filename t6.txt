@@ -1,4 +1,3 @@
-
 %Test Case 6: Syntactically incorrect testcase - HAS ERRORS
 %Following program computes an arithmetic expression 
 

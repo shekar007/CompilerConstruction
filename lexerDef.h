@@ -86,5 +86,6 @@ typedef struct token
     char *lexeme;
     Value *value;
     bool isint;
+    int lineno;
 } Token;
 #endif

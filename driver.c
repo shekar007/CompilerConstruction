@@ -38,8 +38,19 @@ void printCommentFreeCode(FILE *codeFile)
         }
     }
 }
-void printTokens(symTable *sym_table)
+void printTokens(FILE *codeFile)
 {
+    int cur_lineno = -1;
+    Token *temp = NULL;
+    while ((temp = getNextToken(codeFile)) != NULL)
+    {
+        if (cur_lineno < temp->lineno)
+        {
+            printf("\nLine.%d", temp->lineno);
+            cur_lineno = temp->lineno;
+        }
+        printf("\t%s %s\n", terminals[temp->name], temp->lexeme);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -68,8 +79,7 @@ int main(int argc, char *argv[])
         }
         if (i == 2)
         {
-            symTable *sym_table = callLexer(codeFile);
-            printTokens(sym_table);
+            printTokens(codeFile);
         }
         if (i == 3)
         {

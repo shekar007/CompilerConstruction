@@ -29,6 +29,8 @@ void computeFirst(Grammar *G, FirstAndFollow *F, nonTerminal V);
 void createParseTable(FirstAndFollow *F, Grammar *G, Table *T);
 void computeFollowHelper(Grammar *G, FirstAndFollow *F, nonTerminal V, Rule *R);
 TreeNode *callParser(FILE *codeFile, FILE *parseTreeOutFile);
+extern const char *terminals[];
+extern const char *non_terminals[];
 // parseTree *parseInputSourceCode(char *testcaseFile, Table T);
 // void printParseTree(parseTree *PT, char *outfile);
 #endif

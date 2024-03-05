@@ -11,5 +11,5 @@ void initializations();
 FILE *getStream(FILE *fp);
 void printToken(Token *t);
 Token *getNextToken(FILE *fileptr);
-symTable *callLexer(FILE *codeFile);
+void callLexer(FILE *codeFile);
 #endif

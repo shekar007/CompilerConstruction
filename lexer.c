@@ -1451,7 +1451,7 @@ void initializations()
 //please put any other other required for their invocation in here.
 //codeFile has been given "r" permissions in driver.
 //callLexer will return symTable* which will be used to print in option 2 of driver.
-symTable *callLexer(FILE *codeFile)
+void callLexer(FILE *codeFile)
 {
 
     // Allocate memory for buffers

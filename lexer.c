@@ -1423,52 +1423,6 @@ void printToken(Token *t)
     printf("Line number : %d\n", lineno);
     printf("------------------- \n");
 }
-// int main()
-// {
-
-//     // Allocate memory for buffers
-//     symbolTable = createEmptyTable(50);
-//     addKeywords(symbolTable);
-
-//     buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
-//     buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
-//     if (buffer->buffer1 == NULL)
-//     {
-//         fprintf(stderr, "Memory allocation failed for buffer1\n");
-//         return 1; // Exit with failure status
-//     }
-//     buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
-//     if (buffer->buffer2 == NULL)
-//     {
-//         fprintf(stderr, "Memory allocation failed for buffer1\n");
-//         return 1; // Exit with failure status
-//     }
-//     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
-//     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
-//     FILE *fileptr = fopen("testCaseFile.txt", "r");
-//     if (fileptr == NULL)
-//     {
-//         printf("Error in operning \n");
-//         return 1;
-//     }
-//     while (true)
-//     {
-//         // printf("entered while\n");
-//         Token *tokenReturned = getNextToken(fileptr);
-//         if (tokenReturned == NULL)
-//         {
-//             break;
-//         }
-//         else
-//         {
-//             printToken(tokenReturned);
-//         }
-//     }
-
-//     fclose(fileptr);
-
-//     return 0;
-// }
 
 void initializations()
 {
@@ -1491,5 +1445,55 @@ void initializations()
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
     memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
 
-    //
+}
+// @chandu & @aadit. first of all good morning
+//the mains of lexer and parser both have been converted to callLexer() & callParser() respectively(we can only have one main)
+//please put any other other required for their invocation in here.
+//codeFile has been given "r" permissions in driver.
+//callLexer will return symTable* which will be used to print in option 2 of driver.
+symTable *callLexer(FILE *codeFile)
+{
+
+    // Allocate memory for buffers
+    symbolTable = createEmptyTable(50);
+    addKeywords(symbolTable);
+
+    buffer = (twinBuffer *)malloc(sizeof(twinBuffer));
+    buffer->buffer1 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // true
+    if (buffer->buffer1 == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed for buffer1\n");
+        return NULL; // Exit with failure status
+    }
+    buffer->buffer2 = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char)); // false
+    if (buffer->buffer2 == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed for buffer1\n");
+        return NULL; // Exit with failure status
+    }
+    memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+    memset(buffer->buffer1, '\0', BUFFER_SIZE + 1);
+    FILE *fileptr = codeFile;  
+    if (fileptr == NULL)
+    {
+        printf("Error in operning \n");
+        return NULL;
+    }
+    while (true)
+    {
+        // printf("entered while\n");
+        Token *tokenReturned = getNextToken(fileptr);
+        if (tokenReturned == NULL)
+        {
+            break;
+        }
+        else
+        {
+            printToken(tokenReturned);
+        }
+    }
+
+    fclose(fileptr);
+
+    return symbolTable;
 }

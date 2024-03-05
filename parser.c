@@ -1209,76 +1209,80 @@ void printParseTree(TreeNode * PT, FILE * fileptr, int * i){
     }
 }
 
+// @chandu & @aadit. first of all good morning
+/*1. the mains of lexer and parser both have been converted to callLexer() & callParser() respectively(we can only have one main)
+please put any other other required for their invocation in here.
+codeFile has been given "r" permissions in driver.*/
+/*2. The lexer and parser are to be called seperately(option 2 in driver specification) as well as together(option 3)*/
+TreeNode *callParser(FILE *codeFile, FILE *parseTreeOutFile)
+{
 
-// int main()
-// {
+    FILE *fp = fopen("modified_grammar.txt", "r");
+    if (fp == NULL)
+    {
+        printf("failed to open file\n");
+    }
+    Grammar *G = generateGrammar(fp);
+    // printGrammar(G);
 
-//     FILE *fp = fopen("modified_grammar.txt", "r");
-//     if (fp == NULL)
-//     {
-//         printf("failed to open file\n");
-//     }
-//     Grammar *G = generateGrammar(fp);
-//     // printGrammar(G);
+    printf("grammar generated\n");
 
-//     printf("grammar generated\n");
+    FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
+    allocSets(F);
 
-//     FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
-//     allocSets(F);
+    printf("start compute first\n");
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        computeFirst(G, F, (nonTerminal)i);
+    }
+    printf("end of compute first\n");
+    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+    {
+        nonTerminal V = i;
 
-//     printf("start compute first\n");
-//     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-//     {
-//         computeFirst(G, F, (nonTerminal)i);
-//     }
-//     printf("end of compute first\n");
-//     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-//     {
-//         nonTerminal V = i;
+        // TokenList *followSet = F->table[i]->followSet;
+        // printf("start compute Follow\n");
+        // TokenListNode *head = followSet->head;
 
-//         // TokenList *followSet = F->table[i]->followSet;
-//         // printf("start compute Follow\n");
-//         // TokenListNode *head = followSet->head;
+        computeFollow(G, F, V);
+        continue;
 
-//         computeFollow(G, F, V);
-//         continue;
+        TokenList *followSet = F->table[i]->followSet;
+        TokenListNode *head = followSet->head;
+        printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+        for (int i = 0; i < followSet->setSize; i++)
+        {
+            printf("%s, ", terminals[head->name]);
+            head = head->next;
+        }
+        printf("\n");
+    }
+    Table *T = allocParseTable();
+    createParseTable(F, G, T);
+    //printParseTable(T);
 
-//         TokenList *followSet = F->table[i]->followSet;
-//         TokenListNode *head = followSet->head;
-//         printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
-//         for (int i = 0; i < followSet->setSize; i++)
-//         {
-//             printf("%s, ", terminals[head->name]);
-//             head = head->next;
-//         }
-//         printf("\n");
-//     }
-//     Table *T = allocParseTable();
-//     createParseTable(F, G, T);
-//     //printParseTable(T);
+    //---------------------
+    initializations();
+    FILE *fileptr = codeFile;
+    if (fileptr == NULL)
+    {
+        printf("Error in opening \n");
+        return NULL;
+    }
 
-//     //---------------------
-//     initializations();
-//     FILE *fileptr = fopen("t2.txt", "r");
-//     if (fileptr == NULL)
-//     {
-//         printf("Error in opening \n");
-//         return 1;
-//     }
+    TreeNode * root = createParseTree(fileptr, G, T);
 
-//     TreeNode * root = createParseTree(fileptr, G, T);
+    FILE *file = fopen("example.txt", "w");
+    if (file == NULL) {
+        perror("Failed to open file");
+        return NULL;
+    }
 
-//     FILE *file = fopen("example.txt", "w");
-//     if (file == NULL) {
-//         perror("Failed to open file");
-//         return 1;
-//     }
+    int i = 0;
+    printParseTree(root, file, &i);
 
-//     int i = 0;
-//     printParseTree(root, file, &i);
+    fclose(fileptr);
 
-//     fclose(fileptr);
-
-//     return 0;
-//     // Allocate memory for buffers
-// }
+    return root;
+    // Allocate memory for buffers
+}

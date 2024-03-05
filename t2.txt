@@ -16,7 +16,7 @@ end
 
 _main
 	type int :b3;
-	type real :c4bd56;
+	type real :c4bd56; %comment test: to see if comment after code works!
 	b3 <--- 7;
 	[c4bd56]<--- call _sumN with parameters [b3];
 	write(c4bd56);

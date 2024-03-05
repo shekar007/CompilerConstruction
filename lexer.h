@@ -5,8 +5,11 @@
 #include <string.h>
 #include <stdbool.h>
 #include "lexerDef.h"
+#include "symbolTableDef.h"
+
 void initializations();
 FILE *getStream(FILE *fp);
 void printToken(Token *t);
 Token *getNextToken(FILE *fileptr);
+symTable *callLexer(FILE *codeFile);
 #endif

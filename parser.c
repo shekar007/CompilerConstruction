@@ -1165,17 +1165,17 @@ void printParseTree(TreeNode * PT, FILE * fileptr, int * i){
         printParseTree(PT->childList->head, fileptr, i);
     }
 
-    fprintf(fileptr, "\n---------------------------------------------------------------------------------------\n");
+    fprintf(fileptr, "\n...........................................................................\n");
 
     if(!PT->isTerm){
-        fprintf(fileptr, "---  ");
+        fprintf(fileptr, "---%-32s"," ");
     }
     else{
-        fprintf(fileptr, "%s  ", PT->lexeme);
+        fprintf(fileptr, "%-30s%5s", PT->lexeme," ");
     }
 
-    fprintf(fileptr, "Node no. %d  ", *i);
-    fprintf(fileptr, "%d  ", PT->lineno);
+    fprintf(fileptr, "Node no. %-5d%5s", *i, " ");
+    fprintf(fileptr, "%-5d  ", PT->lineno);
     
     if(!PT->isTerm){
         fprintf(fileptr, "%s  ", non_terminals[PT->value.non_terminal]);

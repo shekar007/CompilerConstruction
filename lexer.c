@@ -21,7 +21,7 @@
 #define __symbolTable_H_INCLUDED__
 #include "symbolTable.h"
 #endif
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 4096
 
 twinBuffer *buffer;
 symTable *symbolTable;

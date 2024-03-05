@@ -1210,75 +1210,75 @@ void printParseTree(TreeNode * PT, FILE * fileptr, int * i){
 }
 
 
-int main()
-{
+// int main()
+// {
 
-    FILE *fp = fopen("modified_grammar.txt", "r");
-    if (fp == NULL)
-    {
-        printf("failed to open file\n");
-    }
-    Grammar *G = generateGrammar(fp);
-    // printGrammar(G);
+//     FILE *fp = fopen("modified_grammar.txt", "r");
+//     if (fp == NULL)
+//     {
+//         printf("failed to open file\n");
+//     }
+//     Grammar *G = generateGrammar(fp);
+//     // printGrammar(G);
 
-    printf("grammar generated\n");
+//     printf("grammar generated\n");
 
-    FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
-    allocSets(F);
+//     FirstAndFollow *F = (FirstAndFollow *)malloc(sizeof(FirstAndFollow));
+//     allocSets(F);
 
-    printf("start compute first\n");
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
-        computeFirst(G, F, (nonTerminal)i);
-    }
-    printf("end of compute first\n");
-    for (int i = 0; i < NO_OF_NONTERMINALS; i++)
-    {
-        nonTerminal V = i;
+//     printf("start compute first\n");
+//     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+//     {
+//         computeFirst(G, F, (nonTerminal)i);
+//     }
+//     printf("end of compute first\n");
+//     for (int i = 0; i < NO_OF_NONTERMINALS; i++)
+//     {
+//         nonTerminal V = i;
 
-        // TokenList *followSet = F->table[i]->followSet;
-        // printf("start compute Follow\n");
-        // TokenListNode *head = followSet->head;
+//         // TokenList *followSet = F->table[i]->followSet;
+//         // printf("start compute Follow\n");
+//         // TokenListNode *head = followSet->head;
 
-        computeFollow(G, F, V);
-        continue;
+//         computeFollow(G, F, V);
+//         continue;
 
-        TokenList *followSet = F->table[i]->followSet;
-        TokenListNode *head = followSet->head;
-        printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
-        for (int i = 0; i < followSet->setSize; i++)
-        {
-            printf("%s, ", terminals[head->name]);
-            head = head->next;
-        }
-        printf("\n");
-    }
-    Table *T = allocParseTable();
-    createParseTable(F, G, T);
-    //printParseTable(T);
+//         TokenList *followSet = F->table[i]->followSet;
+//         TokenListNode *head = followSet->head;
+//         printf("Follow(%s) %d: ", non_terminals[(int)V], (int)V);
+//         for (int i = 0; i < followSet->setSize; i++)
+//         {
+//             printf("%s, ", terminals[head->name]);
+//             head = head->next;
+//         }
+//         printf("\n");
+//     }
+//     Table *T = allocParseTable();
+//     createParseTable(F, G, T);
+//     //printParseTable(T);
 
-    //---------------------
-    initializations();
-    FILE *fileptr = fopen("t2.txt", "r");
-    if (fileptr == NULL)
-    {
-        printf("Error in opening \n");
-        return 1;
-    }
+//     //---------------------
+//     initializations();
+//     FILE *fileptr = fopen("t2.txt", "r");
+//     if (fileptr == NULL)
+//     {
+//         printf("Error in opening \n");
+//         return 1;
+//     }
 
-    TreeNode * root = createParseTree(fileptr, G, T);
+//     TreeNode * root = createParseTree(fileptr, G, T);
 
-    FILE *file = fopen("example.txt", "w");
-    if (file == NULL) {
-        perror("Failed to open file");
-        return 1;
-    }
+//     FILE *file = fopen("example.txt", "w");
+//     if (file == NULL) {
+//         perror("Failed to open file");
+//         return 1;
+//     }
 
-    int i = 0;
-    printParseTree(root, file, &i);
+//     int i = 0;
+//     printParseTree(root, file, &i);
 
-    fclose(fileptr);
+//     fclose(fileptr);
 
-    return 0;
-    // Allocate memory for buffers
-}
+//     return 0;
+//     // Allocate memory for buffers
+// }

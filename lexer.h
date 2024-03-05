@@ -9,4 +9,5 @@ void initializations();
 FILE *getStream(FILE *fp);
 void printToken(Token *t);
 Token *getNextToken(FILE *fileptr);
+void printToken(Token *t)
 #endif

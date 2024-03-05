@@ -1,3 +1,5 @@
+#ifndef SYMBOLTABLEDEF_H
+#define SYMBOLTABLEDEF_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,3 +33,4 @@ typedef struct nodeInfo
     bool is_present;
     symNode *node;
 } nodeInfo;
+#endif

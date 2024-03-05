@@ -1,5 +1,5 @@
-#ifndef STACK_H
-#define STACK_H
+#ifndef STACKDEF_H
+#define STACKDEF_H
 
 #include <stdlib.h>
 
